@@ -402,17 +402,117 @@ body::before {
 .card-body::-webkit-scrollbar-track { background: transparent; }
 .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* ── Responsive ── */
-@media (max-width: 600px) {
+/* ── Responsive: Tablet ── */
+@media (max-width: 700px) {
   .shell { padding: 1.5rem 1rem 3rem; }
-  .header h1 { font-size: 1.5rem; }
-  .card-front .card-body { font-size: 1.05rem; padding: 1rem 1.2rem; }
-  .card-back .card-body { font-size: 0.9rem; padding: 1rem 1.2rem; }
-  .stats-row { gap: 1.2rem; font-size: 0.62rem; }
-  .deck-btn { padding: 0.45rem 0.7rem; font-size: 0.65rem; }
-  .actions { gap: 0.5rem; }
-  .act-btn { padding: 0.6rem 1.2rem; font-size: 0.65rem; }
-  :root { --card-height: 340px; }
+  .header h1 { font-size: 1.6rem; }
+  .header { margin-bottom: 1.8rem; }
+}
+
+/* ── Responsive: Mobile ── */
+@media (max-width: 600px) {
+  :root { --card-height: auto; }
+
+  .shell { padding: 1.2rem 0.75rem 2.5rem; }
+  .header { margin-bottom: 1.5rem; }
+  .header h1 { font-size: 1.35rem; }
+  .header .subtitle { font-size: 0.6rem; margin-top: 0.35rem; }
+  .header::after { margin-top: 1rem; }
+
+  /* Deck bar: horizontal scroll */
+  .deck-bar {
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.15rem;
+    padding: 3px;
+    margin-bottom: 1.2rem;
+  }
+  .deck-bar::-webkit-scrollbar { display: none; }
+  .deck-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.62rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Stats */
+  .stats-row { gap: 1rem; font-size: 0.6rem; margin-bottom: 1.2rem; }
+  .progress-track { margin-bottom: 1.2rem; }
+
+  /* Card: auto height with min/max */
+  .card-stage {
+    height: auto;
+    min-height: 280px;
+    margin-bottom: 1rem;
+  }
+  .card-inner {
+    height: auto;
+    min-height: 280px;
+  }
+  .card-face {
+    position: relative;
+    height: auto;
+    min-height: 280px;
+  }
+  .card-inner .card-face:nth-child(2) {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    min-height: 100%;
+  }
+  .card-front .card-body {
+    font-size: 1.05rem;
+    padding: 1rem 1.2rem;
+    min-height: 180px;
+  }
+  .card-back .card-body {
+    font-size: 0.88rem;
+    padding: 0.8rem 1rem;
+    min-height: 180px;
+  }
+  .card-label { padding: 0.7rem 1rem 0; font-size: 0.55rem; }
+  .card-counter { padding: 0.6rem 1rem 0 0; font-size: 0.6rem; }
+  .card-hint { padding: 0 1rem 0.6rem; font-size: 0.55rem; }
+
+  /* KaTeX: scale down wide formulas */
+  .card-back .katex-display { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; }
+  .card-back .katex { font-size: 0.92em !important; }
+
+  /* Answer layout tighter */
+  .card-back .card-body .answer-desc { font-size: 0.78rem; line-height: 1.5; padding-top: 0.5rem; }
+  .card-back .card-body .answer-formula { margin-bottom: 0.5rem; }
+  .card-back .card-body .answer-plain { font-size: 0.88rem; line-height: 1.6; }
+
+  /* Action buttons: bigger touch targets, hide keyboard hints */
+  .actions { gap: 0.6rem; margin-bottom: 1.2rem; }
+  .act-btn {
+    padding: 0.75rem 1.6rem;
+    font-size: 0.68rem;
+    flex: 1;
+    justify-content: center;
+    max-width: 160px;
+  }
+  .act-btn .key { display: none !important; }
+
+  /* Controls */
+  .controls { gap: 0.4rem; }
+  .ctrl-btn { font-size: 0.6rem; padding: 0.4rem 0.8rem; }
+
+  /* Mastery bar */
+  .mastery-bar { margin-top: 1.5rem; padding-top: 1rem; }
+  .mastery-sub { font-size: 0.52rem; }
+}
+
+/* ── Responsive: Small phones ── */
+@media (max-width: 380px) {
+  .shell { padding: 1rem 0.5rem 2rem; }
+  .header h1 { font-size: 1.15rem; }
+  .card-front .card-body { font-size: 0.95rem; padding: 0.8rem 0.9rem; }
+  .card-back .card-body { font-size: 0.82rem; padding: 0.7rem 0.8rem; }
+  .card-back .katex { font-size: 0.82em !important; }
+  .act-btn { padding: 0.7rem 1rem; font-size: 0.62rem; }
+  .deck-btn { padding: 0.45rem 0.6rem; font-size: 0.58rem; }
 }
 
 /* ── Fade-in on load ── */
@@ -989,7 +1089,13 @@ function showComplete() {
 }
 
 // ─── Events ───
-cardStage.addEventListener('click', flipCard);
+// Use click for desktop, touchend handles mobile (see below)
+cardStage.addEventListener('click', e => {
+  // Skip if touch device — handled by touchend
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  if (window._lastTouchEnd && Date.now() - window._lastTouchEnd < 500) return;
+  flipCard();
+});
 
 $('#btnKnow').addEventListener('click', () => nextCard(true));
 $('#btnMiss').addEventListener('click', () => nextCard(false));
@@ -1040,6 +1146,43 @@ document.addEventListener('keydown', e => {
   if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
   else if (e.key === '2' || e.key === 'ArrowRight') nextCard(true);
   else if (e.key === '1' || e.key === 'ArrowLeft') nextCard(false);
+});
+
+// ─── Touch swipe support ───
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
+cardStage.addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].clientX;
+  touchStartY = e.changedTouches[0].clientY;
+  touchStartTime = Date.now();
+}, { passive: true });
+
+cardStage.addEventListener('touchend', e => {
+  window._lastTouchEnd = Date.now();
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const dt = Date.now() - touchStartTime;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  // Must be a clear horizontal swipe: >60px, more horizontal than vertical, within 400ms
+  if (absDx > 60 && absDx > absDy * 1.5 && dt < 400) {
+    e.preventDefault();
+    if (dx > 0) nextCard(true);   // swipe right = know it
+    else nextCard(false);          // swipe left = missed
+  }
+  // Short tap (no significant movement) = flip
+  else if (absDx < 15 && absDy < 15 && dt < 300) {
+    flipCard();
+  }
+}, { passive: false });
+
+// ─── Touch-aware hint text ───
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+document.querySelectorAll('.card-front .card-hint').forEach(el => {
+  el.textContent = isTouchDevice ? 'tap to reveal · swipe to answer' : 'click or press space to reveal';
 });
 
 // Start
