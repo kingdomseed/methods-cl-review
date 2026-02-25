@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Methods in CL - Exam Review</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root {
+  --bg: #0e0f13;
+  --surface: #16171d;
+  --surface-raised: #1d1f27;
+  --border: #2a2c37;
+  --border-warm: #3a2e1e;
+  --text: #d4cfc6;
+  --text-dim: #7c7870;
+  --text-faint: #4a473f;
+  --amber: #d4a54a;
+  --amber-dim: #a07830;
+  --amber-glow: rgba(212,165,74,0.08);
+  --green: #5a9a6a;
+  --green-bg: rgba(90,154,106,0.1);
+  --red: #b85450;
+  --red-bg: rgba(184,84,80,0.1);
+  --card-height: 380px;
+}
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Source Serif 4', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Texture overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Layout ── */
+.shell {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+.header::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 1px;
+  background: var(--amber-dim);
+  margin: 1.5rem auto 0;
+}
+.header h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  font-size: 2rem;
+  color: var(--amber);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.header .subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 300;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
+/* ── Deck selector ── */
+.deck-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 2rem;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+.deck-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+.deck-btn:hover { color: var(--text); }
+.deck-btn.active {
+  background: var(--surface-raised);
+  color: var(--amber);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.deck-btn .count {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  margin-left: 0.3rem;
+}
+
+/* ── Stats row ── */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.stat-item { display: flex; align-items: center; gap: 0.4rem; }
+.stat-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  display: inline-block;
+}
+.stat-dot.known { background: var(--green); }
+.stat-dot.unknown { background: var(--red); }
+.stat-dot.remaining { background: var(--text-faint); }
+.stat-val { color: var(--text); font-weight: 500; }
+
+/* ── Progress bar ── */
+.progress-track {
+  width: 100%;
+  height: 3px;
+  background: var(--surface);
+  border-radius: 2px;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  display: flex;
+}
+.progress-fill-known {
+  height: 100%;
+  background: var(--green);
+  transition: width 0.4s ease;
+}
+.progress-fill-unknown {
+  height: 100%;
+  background: var(--red);
+  transition: width 0.4s ease;
+}
+
+/* ── Card ── */
+.card-stage {
+  perspective: 1200px;
+  height: var(--card-height);
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+}
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.55s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card-front {
+  background: linear-gradient(170deg, var(--surface-raised) 0%, var(--surface) 100%);
+}
+.card-back {
+  background: linear-gradient(170deg, #1a1b22 0%, #141518 100%);
+  transform: rotateY(180deg);
+  border-color: var(--border-warm);
+}
+
+.card-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1rem 1.5rem 0;
+  color: var(--text-faint);
+}
+.card-front .card-label { color: var(--text-faint); }
+.card-back .card-label { color: var(--amber-dim); }
+
+.card-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 2rem;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.card-front .card-body {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.card-back .card-body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+.card-back .card-body .answer-wrap {
+  width: 100%;
+}
+.card-back .card-body .answer-formula {
+  margin-bottom: 0.8rem;
+}
+.card-back .card-body .answer-desc {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+  margin-top: 0.2rem;
+}
+.card-back .card-body .answer-desc .def-item {
+  display: block;
+  padding: 0.15rem 0;
+}
+.card-back .card-body .answer-desc .def-item b,
+.card-back .card-body .answer-desc .def-item strong {
+  color: var(--amber);
+  font-weight: 600;
+}
+.card-back .card-body .answer-plain {
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+.card-back .card-body b,
+.card-back .card-body strong {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.card-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 0 1.5rem 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.card-counter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  text-align: right;
+  padding: 0.8rem 1.2rem 0 0;
+}
+
+/* ── Action buttons ── */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.act-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  padding: 0.7rem 1.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.act-btn:hover {
+  background: var(--surface-raised);
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+.act-btn.know:hover {
+  border-color: var(--green);
+  background: var(--green-bg);
+  color: var(--green);
+}
+.act-btn.miss:hover {
+  border-color: var(--red);
+  background: var(--red-bg);
+  color: var(--red);
+}
+.act-btn .key {
+  font-size: 0.58rem;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-faint);
+  background: var(--bg);
+}
+
+/* ── Controls row ── */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.ctrl-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ctrl-btn:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+
+/* ── Completion screen ── */
+.complete-screen {
+  display: none;
+  text-align: center;
+  padding: 3rem 1rem;
+}
+.complete-screen.visible { display: block; }
+.complete-screen h2 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.6rem;
+  color: var(--amber);
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+}
+.complete-screen p {
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+}
+.complete-score {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--green);
+  margin: 1.5rem 0;
+}
+.complete-score .denom { color: var(--text-faint); font-size: 1.2rem; }
+.complete-screen .ctrl-btn { margin-top: 1.5rem; }
+
+/* ── KaTeX overrides ── */
+.katex { font-size: 1.05em !important; color: var(--text) !important; }
+.card-back .katex { font-size: 1.1em !important; }
+.katex .mord, .katex .mbin, .katex .mrel,
+.katex .mopen, .katex .mclose, .katex .mpunct,
+.katex .minner, .katex .mop { color: var(--text) !important; }
+
+/* ── Scrollbar ── */
+.card-body::-webkit-scrollbar { width: 4px; }
+.card-body::-webkit-scrollbar-track { background: transparent; }
+.card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .shell { padding: 1.5rem 1rem 3rem; }
+  .header h1 { font-size: 1.5rem; }
+  .card-front .card-body { font-size: 1.05rem; padding: 1rem 1.2rem; }
+  .card-back .card-body { font-size: 0.9rem; padding: 1rem 1.2rem; }
+  .stats-row { gap: 1.2rem; font-size: 0.62rem; }
+  .deck-btn { padding: 0.45rem 0.7rem; font-size: 0.65rem; }
+  .actions { gap: 0.5rem; }
+  .act-btn { padding: 0.6rem 1.2rem; font-size: 0.65rem; }
+  :root { --card-height: 340px; }
+}
+
+/* ── Fade-in on load ── */
+.shell { animation: fadeUp 0.6s ease both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Save indicator ── */
+.save-indicator {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--green);
+  text-align: center;
+  margin-top: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  letter-spacing: 0.04em;
+}
+.save-indicator.flash {
+  opacity: 1;
+}
+
+/* ── Mastery bar ── */
+.mastery-bar {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.mastery-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+.mastery-pct {
+  color: var(--amber);
+  font-weight: 500;
+}
+.mastery-track {
+  width: 100%;
+  max-width: 300px;
+  height: 4px;
+  background: var(--surface);
+  border-radius: 2px;
+  margin: 0 auto 0.5rem;
+  overflow: hidden;
+}
+.mastery-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber-dim), var(--amber));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.mastery-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-faint);
+  letter-spacing: 0.03em;
+}
+
+/* ── Card slide transition ── */
+.card-stage.slide-out .card-inner {
+  animation: slideOut 0.25s ease forwards;
+}
+.card-stage.slide-in .card-inner {
+  animation: slideIn 0.3s ease forwards;
+}
+@keyframes slideOut {
+  to { opacity: 0; transform: translateX(-30px); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="header">
+    <h1>Methods in Computational Linguistics</h1>
+    <div class="subtitle">Exam Review Flashcards</div>
+  </div>
+
+  <div class="deck-bar">
+    <button class="deck-btn active" data-deck="all">All <span class="count" id="countAll"></span></button>
+    <button class="deck-btn" data-deck="concepts">Concepts <span class="count" id="countConcepts"></span></button>
+    <button class="deck-btn" data-deck="formulas">Formulas <span class="count" id="countFormulas"></span></button>
+    <button class="deck-btn" data-deck="missed">Missed <span class="count" id="countMissed"></span></button>
+    <button class="deck-btn" data-deck="weak">Weak <span class="count" id="countWeak"></span></button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item"><span class="stat-dot known"></span> Known <span class="stat-val" id="statKnown">0</span></div>
+    <div class="stat-item"><span class="stat-dot unknown"></span> Missed <span class="stat-val" id="statMissed">0</span></div>
+    <div class="stat-item"><span class="stat-dot remaining"></span> Left <span class="stat-val" id="statLeft">0</span></div>
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-fill-known" id="progressKnown" style="width:0%"></div>
+    <div class="progress-fill-unknown" id="progressUnknown" style="width:0%"></div>
+  </div>
+
+  <div class="card-stage" id="cardStage">
+    <div class="card-inner" id="cardInner">
+      <div class="card-face card-front">
+        <div class="card-counter" id="cardCounter"></div>
+        <div class="card-label">Question</div>
+        <div class="card-body" id="frontBody"></div>
+        <div class="card-hint">click or press space to reveal</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-counter" id="cardCounterBack"></div>
+        <div class="card-label">Answer</div>
+        <div class="card-body" id="backBody"></div>
+        <div class="card-hint"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" id="actions">
+    <button class="act-btn miss" id="btnMiss">Missed <span class="key">1</span></button>
+    <button class="act-btn know" id="btnKnow">Know it <span class="key">2</span></button>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="btnShuffle">Shuffle</button>
+    <button class="ctrl-btn" id="btnReset">Reset</button>
+    <button class="ctrl-btn" id="btnClearData">Clear saved data</button>
+  </div>
+
+  <div class="save-indicator" id="saveIndicator">Progress saved</div>
+
+  <div class="mastery-bar" id="masteryBar">
+    <div class="mastery-label">Mastery <span class="mastery-pct" id="masteryPct">0%</span></div>
+    <div class="mastery-track"><div class="mastery-fill" id="masteryFill" style="width:0%"></div></div>
+    <div class="mastery-sub" id="masterySub">0 / 148 cards mastered across sessions</div>
+  </div>
+
+  <div class="complete-screen" id="completeScreen">
+    <h2>Session Complete</h2>
+    <p>You reviewed all cards in this deck.</p>
+    <div class="complete-score"><span id="finalKnown">0</span> <span class="denom">/ <span id="finalTotal">0</span></span></div>
+    <p id="finalMsg"></p>
+    <button class="ctrl-btn" id="btnRestart">Review again</button>
+    <button class="ctrl-btn" id="btnReviewMissed" style="margin-top:0.75rem">Review missed only</button>
+  </div>
+</div>
+
+<script>
+// ─── Card Data ───
+const FORMULAS = [
+  {q:"Sine wave formula",a:`\\[y = A \\cdot \\sin(2\\pi f x + b)\\]<br><b>y</b> = amplitude at position x | <b>A</b> = max amplitude | <b>f</b> = frequency (Hz) | <b>x</b> = time | <b>b</b> = phase shift`},
+  {q:"Period \u2194 Frequency conversion",a:`\\[f = \\frac{1}{T} \\qquad T = \\frac{1}{f}\\]<br><b>f</b> = frequency (Hz) | <b>T</b> = period duration (seconds)`},
+  {q:"Nyquist frequency",a:`\\[f_{\\text{Nyquist}} = \\frac{\\text{sampling rate}}{2}\\]<br>Highest frequency that can be captured without aliasing`},
+  {q:"Signal power",a:`\\[P = \\frac{1}{N} \\sum_{i=1}^{N} x_i^2\\]<br><b>N</b> = total number of samples | <b>x_i</b> = amplitude of sample i`},
+  {q:"Time resolution (spectrogram)",a:`\\[\\Delta t = \\text{window length (seconds)}\\]<br>Longer window \u2192 worse time resolution`},
+  {q:"Frequency resolution (spectrogram)",a:`\\[\\Delta f = \\frac{1}{\\text{window length (seconds)}}\\]<br>Longer window \u2192 better frequency resolution`},
+  {q:"Simple agreement (A_xy)",a:`\\[A_{xy} = \\frac{\\text{number of items agreed on}}{\\text{total number of items}}\\]<br><b>A_xy</b> = proportion of items where annotators x and y gave the same label`},
+  {q:"Expected agreement (E_xy) \u2014 Cohen\u2019s",a:`\\[E_{xy} = \\sum_{j} \\frac{a_{xj}}{J} \\cdot \\frac{a_{yj}}{J}\\]<br><b>a_xj</b> = times annotator x assigned category j | <b>J</b> = total items`},
+  {q:"Cohen\u2019s Kappa (\u03ba)",a:`\\[\\kappa_{xy} = \\frac{A_{xy} - E_{xy}}{1 - E_{xy}}\\]<br><b>A_xy</b> = observed agreement | <b>E_xy</b> = expected agreement by chance`},
+  {q:"Fleiss\u2019 Kappa (\u03ba)",a:`\\[\\kappa = \\frac{\\bar{P} - \\bar{P}_e}{1 - \\bar{P}_e}\\]<br>where \\(\\bar{P} = \\frac{1}{J}\\sum_j P_j\\), \\(P_j = \\frac{1}{n(n-1)}\\sum_k(n_{kj}^2 - n)\\), \\(\\bar{P}_e = \\sum_k p_k^2\\), \\(p_k = \\frac{1}{Jn}\\sum_j n_{kj}\\)<br><b>J</b> = items | <b>n</b> = annotators per item | <b>n_kj</b> = annotators assigning category k to item j`},
+  {q:"Simple Plurality Rule (SPR)",a:`\\[\\text{SPR}(A_j) = \\underset{k \\in K}{\\arg\\max} \\sum_{i \\in N_j} [a_{ij} = k]\\]<br>Assigns the most-chosen category k to item j | <b>N_j</b> = annotators for item j`},
+  {q:"PMI (Pointwise Mutual Information)",a:`\\[\\text{PMI}(x, y) = \\log_2 \\frac{P(x,y)}{P(x) \\cdot P(y)}\\]<br><b>P(x,y)</b> = co-occurrence probability | <b>P(x), P(y)</b> = individual word probabilities`},
+  {q:"Cosine similarity",a:`\\[\\cos(\\vec{v_1}, \\vec{v_2}) = \\frac{\\vec{v_1} \\cdot \\vec{v_2}}{|\\vec{v_1}| \\cdot |\\vec{v_2}|}\\]<br><b>v1\u00b7v2</b> = dot product | <b>|v|</b> = magnitude = \u221a(\u03a3v_i\u00b2)`},
+  {q:"Euclidean distance",a:`\\[d(\\vec{v_1}, \\vec{v_2}) = \\sqrt{\\sum_{i}(v_{1i} - v_{2i})^2}\\]<br><b>v_1i, v_2i</b> = i-th elements of each vector`},
+  {q:"Probability of an event",a:`\\[P(A) = \\frac{|A|}{|\\Omega|}\\]<br><b>|A|</b> = outcomes in event A | <b>|\u03a9|</b> = total outcomes in sample space`},
+  {q:"Conditional probability",a:`\\[P(A \\mid B) = \\frac{P(A \\cap B)}{P(B)}\\]<br><b>P(A\u2229B)</b> = probability both A and B occur | <b>P(B)</b> = probability of B`},
+  {q:"Multiplication rule",a:`\\[P(A \\cap B) = P(A \\mid B) \\cdot P(B)\\]`},
+  {q:"Bayes\u2019 theorem",a:`\\[P(A \\mid B) = \\frac{P(B \\mid A) \\cdot P(A)}{P(B)}\\]<br><b>P(A)</b> = prior | <b>P(B|A)</b> = likelihood | <b>P(A|B)</b> = posterior | <b>P(B)</b> = marginal probability`},
+  {q:"Expectation E[X]",a:`\\[E[X] = \\sum_{i} x_i \\cdot P(x_i)\\]<br><b>x_i</b> = possible outcome | <b>P(x_i)</b> = probability of that outcome`},
+  {q:"Variance Var(X)",a:`\\[\\text{Var}(X) = \\sum_{i}(x_i - \\mu)^2 \\cdot P(x_i) = E[X^2] - (E[X])^2\\]<br><b>\u03bc = E[X]</b> = mean | measures average squared deviation from mean`},
+  {q:"Standard deviation \u03c3",a:`\\[\\sigma = \\sqrt{\\text{Var}(X)}\\]<br><b>Var(X)</b> = variance of X`},
+  {q:"Entropy H(X)",a:`\\[H(X) = -\\sum_{x} P(x) \\cdot \\log_2 P(x)\\]<br><b>P(x)</b> = probability of outcome x | Higher entropy = more uncertainty`},
+  {q:"Zipf\u2019s Law",a:`\\[\\text{rank} \\times \\text{frequency} \\approx \\text{constant}\\]<br>The 2nd most frequent word appears ~\u00bd as often as the 1st, 3rd ~\u2153, etc.`},
+  {q:"MLE unigram probability",a:`\\[P_{\\text{MLE}}(w_i) = \\frac{C(w_i)}{N}\\]<br><b>C(w_i)</b> = count of word w_i | <b>N</b> = total tokens in corpus`},
+  {q:"MLE bigram probability",a:`\\[P_{\\text{MLE}}(w_n \\mid w_{n-1}) = \\frac{C(w_{n-1}, w_n)}{C(w_{n-1})}\\]<br><b>C(w_{n-1}, w_n)</b> = bigram count | <b>C(w_{n-1})</b> = unigram count of history word`},
+  {q:"General MLE n-gram probability",a:`\\[P_{\\text{MLE}}(w_n \\mid w_1^{n-1}) = \\frac{C(w_1 \\ldots w_n)}{C(w_1 \\ldots w_{n-1})}\\]<br><b>C(w_1\u2026w_n)</b> = n-gram count | <b>C(w_1\u2026w_{n-1})</b> = (n-1)-gram count`},
+  {q:"i-th order Markov model",a:`\\[P(w_n \\mid w_1^{n-1}) \\approx P(w_n \\mid w_{n-i}^{n-1})\\]<br><b>i</b> = order of model (e.g. i=1 \u2192 bigram, i=2 \u2192 trigram) | Only last i words used as history`},
+  {q:"Laplace-smoothed unigram",a:`\\[P_{\\text{Laplace}}(w_i) = \\frac{C(w_i) + 1}{N + V}\\]<br><b>V</b> = vocabulary size (number of unique word types)`},
+  {q:"Laplace-smoothed bigram",a:`\\[P_{\\text{Laplace}}(w_n \\mid w_{n-1}) = \\frac{C(w_{n-1}, w_n) + 1}{C(w_{n-1}) + V}\\]<br><b>V</b> = vocabulary size`},
+  {q:"Perplexity (general)",a:`\\[PP(W) = \\sqrt[N]{\\prod_{i=1}^{N} \\frac{1}{P(w_i \\mid w_1 \\ldots w_{i-1})}}\\]<br><b>W</b> = test corpus | <b>N</b> = number of words | lower PP = better model`},
+  {q:"Perplexity (bigram)",a:`\\[PP(W) = \\sqrt[N]{\\prod_{i=1}^{N} \\frac{1}{P(w_i \\mid w_{i-1})}}\\]<br><b>P(w_i|w_{i-1})</b> = bigram probability`},
+  {q:"Accuracy",a:`\\[\\text{Accuracy} = \\frac{TP + TN}{TP + TN + FP + FN}\\]<br><b>TP</b> = true pos | <b>TN</b> = true neg | <b>FP</b> = false pos | <b>FN</b> = false neg`},
+  {q:"Precision",a:`\\[\\text{Precision} = \\frac{TP}{TP + FP}\\]<br>Of everything predicted positive, how many actually were?`},
+  {q:"Recall",a:`\\[\\text{Recall} = \\frac{TP}{TP + FN}\\]<br>Of everything actually positive, how many did the model find?`},
+  {q:"F1-score",a:`\\[F_1 = \\frac{2 \\cdot \\text{Precision} \\cdot \\text{Recall}}{\\text{Precision} + \\text{Recall}}\\]<br>Harmonic mean of Precision and Recall`},
+  {q:"Spearman\u2019s \u03c1 (rank correlation)",a:`\\[\\rho = 1 - \\frac{6\\sum d_i^2}{n(n^2 - 1)}\\]<br><b>d_i</b> = difference between ranks of x_i and y_i | <b>n</b> = number of data points`},
+  {q:"Regression slope b",a:`\\[b = r \\cdot \\frac{s_y}{s_x}\\]<br><b>r</b> = Pearson\u2019s correlation (given) | <b>s_y</b> = std dev of y (given) | <b>s_x</b> = std dev of x (given)`},
+  {q:"Regression intercept a",a:`\\[a = \\bar{y} - b\\bar{x}\\]<br><b>\u0233</b> = mean of y | <b>b</b> = slope | <b>x\u0304</b> = mean of x`},
+  {q:"Simple linear regression line",a:`\\[\\hat{y} = a + bx\\]<br><b>\u0177</b> = predicted value | <b>a</b> = intercept | <b>b</b> = slope | <b>x</b> = predictor value`},
+  {q:"Naive Bayes classifier",a:`\\[\\hat{s} = \\underset{s \\in S}{\\arg\\max}\\ P(s) \\prod_{j=1}^{n} P(f_j \\mid s)\\]<br><b>S</b> = all classes | <b>P(s)</b> = prior | <b>P(f_j|s)</b> = likelihood of feature f_j given class s`},
+  {q:"Information gain (decision tree)",a:`\\[\\text{IG}(C, \\text{attr}) = H(C_{\\text{all}}) - \\sum_{\\text{val}} \\frac{|C_{\\text{val}}|}{|C_{\\text{all}}|} \\cdot H(C_{\\text{val}})\\]<br><b>H(C_all)</b> = entropy before split | <b>H(C_val)</b> = entropy of subset with that attribute value`},
+  {q:"Silhouette score",a:`\\[\\text{sil}(o) = \\frac{d_{\\text{out}}(o) - d_{\\text{in}}(o)}{\\max(d_{\\text{out}}(o),\\ d_{\\text{in}}(o))}\\]<br><b>d_in(o)</b> = avg dist to same-cluster objects | <b>d_out(o)</b> = avg dist to nearest other cluster`},
+  {q:"Rand Index (RI)",a:`\\[RI = \\frac{\\text{number of agreeing pairs}}{|o|}\\]<br><b>Agreeing pairs</b> = pairs both co-clustered OR both separated in c and g | <b>|o|</b> = total pairs`},
+  {q:"Pair-wise Precision",a:`\\[P = \\frac{|c \\cap g|}{|c|}\\]<br><b>c</b> = same-cluster pairs in your clustering | <b>g</b> = same-cluster pairs in gold standard`},
+  {q:"Pair-wise Recall",a:`\\[R = \\frac{|c \\cap g|}{|g|}\\]<br><b>g</b> = same-cluster pairs in gold standard`},
+  {q:"Pair-wise F1",a:`\\[F_1 = \\frac{2 \\cdot P \\cdot R}{P + R}\\]<br><b>P</b> = pair-wise precision | <b>R</b> = pair-wise recall`}
+];
+
+const CONCEPTS = [
+  {q:"What are the main manners of articulation?",a:"Plosive (stop), fricative, affricate, nasal, approximant (liquid/glide), lateral."},
+  {q:"What are the main places of articulation?",a:"Bilabial, labiodental, dental, alveolar, postalveolar, palatal, velar, glottal."},
+  {q:"What are the main articulators?",a:"Lips, teeth, alveolar ridge, hard palate, soft palate (velum), tongue (tip, blade, body, root), glottis."},
+  {q:"What are the two axes of the vowel diagram?",a:"Vertical = vowel height (open/close = jaw opening); Horizontal = tongue frontness (front/back). Roundedness is a third dimension."},
+  {q:"What are the primary cardinal vowels and their positions in the vowel diagram?",a:"[i] top-front, [e] upper-mid-front, [\u025b] lower-mid-front, [a] bottom-front, [\u0251] bottom-back, [\u0254] lower-mid-back, [o] upper-mid-back, [u] top-back."},
+  {q:"What is phonation?",a:"The vibration of the vocal folds that produces voiced sounds."},
+  {q:"What is the difference between a monophthong and a diphthong?",a:"A monophthong is a pure, stable vowel (one target). A diphthong glides between two vowel targets within the same syllable."},
+  {q:"What is an allophone?",a:"A phonetically distinct variant of a phoneme that does not change meaning \u2014 e.g., aspirated [p\u02b0] vs. unaspirated [p] are allophones of /p/ in English."},
+  {q:"What are the axes of a waveform (oscillogram)?",a:"X-axis = time; Y-axis = amplitude (air pressure displacement)."},
+  {q:"How do vowels vs. consonants appear in a waveform?",a:"Vowels: periodic, regular oscillation, high amplitude. Consonants vary: plosives show silence + burst; fricatives show irregular/noisy signal; nasals show low-amplitude periodicity."},
+  {q:"What are the two steps of analog-to-digital (A/D) conversion?",a:"Sampling (measuring amplitude at regular time intervals) and quantization (mapping amplitude to discrete integer values)."},
+  {q:"Why is quantization error constant, and what does this mean for recording level?",a:"It depends only on the step size of the quantization scale, not the signal level. Weak signals have a worse signal-to-noise ratio \u2014 so a good recording level is important."},
+  {q:"What is clipping in audio recording?",a:"When the recording level is too high and the signal exceeds the maximum representable amplitude, causing the waveform to be cut off (distortion)."},
+  {q:"How are complex sine waves created?",a:"By adding (superimposing) multiple simple sine waves of different frequencies, amplitudes, and phases (Fourier's theorem)."},
+  {q:"How do you calculate the F0 (fundamental frequency) of a complex wave?",a:"F0 = GCD (Greatest Common Divisor) of all the component frequencies."},
+  {q:"What is aliasing?",a:"A distortion that occurs when the sampling rate is too low to represent a frequency, causing it to appear as a lower (false) frequency."},
+  {q:"What is the source-filter model of speech?",a:"The vocal folds (source) produce a signal \u2014 voiced: quasi-periodic buzz; unvoiced: noise. The vocal tract (filter) amplifies certain frequencies (formants) depending on its shape."},
+  {q:"What are formants?",a:"The resonance frequencies of the vocal tract \u2014 they appear as peaks in the spectrum of a vowel. F1 relates to jaw opening (vowel height); F2 relates to tongue frontness."},
+  {q:"What are harmonics?",a:"Integer multiples of the fundamental frequency (F0) in a periodic signal: F0, 2\u00d7F0, 3\u00d7F0, etc."},
+  {q:"What is wavelength?",a:"The physical distance a wave travels in one complete cycle: wavelength = speed of sound / frequency."},
+  {q:"Describe the spectral shape of vowels, frication noise, and burst transients.",a:"Vowels: strong harmonics with formant peaks. Frication noise: broad, flat/high-frequency aperiodic noise. Burst transients: brief, broadband spike of energy."},
+  {q:"What is a spectrogram?",a:"A time-frequency-energy visualization: X-axis = time, Y-axis = frequency, darkness/color = energy. It is a sequence of spectra from overlapping analysis windows."},
+  {q:"What is windowing and why is it needed?",a:"Slicing the signal into short time frames before spectral analysis. The Fourier transform assumes a stationary signal \u2014 windowing makes speech approximately stationary in short segments."},
+  {q:"What is the difference between broadband and narrowband spectrograms?",a:"Broadband: short window \u2192 good time resolution, poor frequency resolution (shows pitch pulses). Narrowband: long window \u2192 good frequency resolution, poor time resolution (shows individual harmonics)."},
+  {q:"How do you identify voiced vs. unvoiced speech in a spectrogram?",a:"Voiced: regular vertical striations (pitch pulses) and energy at low frequencies (voicing bar). Unvoiced: irregular/noisy energy, no striations."},
+  {q:"What is the mel scale?",a:"A perceptual pitch scale where equal distances correspond to equal perceived pitch differences. It compresses high frequencies, reflecting how humans hear them more coarsely."},
+  {q:"What is a mel filter bank?",a:"A set of triangular filters spaced on the mel scale applied to the power spectrum, used to model human auditory frequency perception."},
+  {q:"What is the advantage of cepstral parameters (MFCCs) over spectral parameters?",a:"They decorrelate filter bank outputs, separate source (F0) from filter (vocal tract shape), and are more compact and robust for speech recognition."},
+  {q:"How is perceived loudness related to power?",a:"Perceived loudness is approximately proportional to the power of the signal, not just its amplitude."},
+  {q:"How does the autocorrelation method estimate F0?",a:"The signal is compared to delayed versions of itself. A peak at a given lag indicates a likely period \u2014 that lag corresponds to 1/F0."},
+  {q:"What are pitch halving and pitch doubling?",a:"Errors in F0 estimation: pitch halving = detecting F0/2 (double the true period); pitch doubling = detecting 2\u00d7F0 (half the period), caused by selecting the wrong autocorrelation peak."},
+  {q:"How do you list all files in a directory using a relative vs. absolute path?",a:"Relative: ls . or ls subdir/   Absolute: ls /home/user/subdir/"},
+  {q:"How do you find all .pdf files up to 4 subdirectories deep?",a:`find . -maxdepth 4 -name "*.pdf"`},
+  {q:"How do you write all pdf filenames in a directory, sorted, into a file called words.list?",a:"ls *.pdf | sort > words.list"},
+  {q:"How do you make a directory unreadable to other users?",a:"chmod o-r dirname"},
+  {q:"What does grep do?",a:`Searches for lines in a file matching a regular expression pattern. Example: grep "word" file.txt`},
+  {q:"What does sed do?",a:`Stream editor for transforming text. Example substitution: sed 's/old/new/g' file.txt`},
+  {q:"What is a corpus?",a:"A large, structured collection of texts used for linguistic analysis. Metadata describes content, origin, size, and other properties."},
+  {q:"What is the difference between a parallel and a comparable corpus?",a:"Parallel: same content translated into multiple languages. Comparable: different texts on the same topic in multiple languages (not translations)."},
+  {q:"What is the type-token ratio (TTR)?",a:"Types (unique words) / Tokens (total word occurrences). A higher TTR indicates greater lexical diversity."},
+  {q:"What are the four main POS tagging approaches?",a:"Rule-based, transformation-based (Brill tagger), statistical (e.g., HMM), and deep learning-based (e.g., neural taggers)."},
+  {q:"What are annotation desiderata?",a:"Annotation should be consistent, reproducible, theory-neutral where possible, well-documented, and guided by clear guidelines."},
+  {q:"What is inter-annotator agreement and why does it matter?",a:"A measure of how consistently multiple annotators label the same data. High agreement indicates reliable annotation; low agreement signals ambiguous guidelines."},
+  {q:"What is Cohen\u2019s Kappa and how does it differ from simple agreement (Axy)?",a:"Cohen\u2019s Kappa accounts for chance agreement (expected agreement), correcting for the possibility annotators agree randomly. Simple Axy does not."},
+  {q:"What are the three common inter-annotator agreement measures?",a:"Cohen\u2019s Kappa (two annotators), Fleiss\u2019 Kappa (multiple annotators), Krippendorff\u2019s Alpha (handles missing data and ordinal scales)."},
+  {q:"What is the simple plurality rule for label aggregation?",a:"The label chosen by the majority of annotators is the gold label. Problem: can be biased if annotators systematically favor one label."},
+  {q:"What is a Finite State Automaton (FSA)?",a:"A computational model with states, transitions (labeled with symbols), a start state, and accept states. It recognizes whether a string belongs to a regular language."},
+  {q:"What is the difference between a deterministic and non-deterministic FSA?",a:"Deterministic FSA: exactly one transition per symbol per state. Non-deterministic FSA: can have multiple transitions for the same symbol (or \u03b5-transitions), but recognizes the same class of languages."},
+  {q:"What is an FST (Finite State Transducer)?",a:"Like an FSA but maps input strings to output strings (transduction). Used for stemming, lemmatization, and morphological analysis."},
+  {q:"What is the difference between inflectional and derivational morphology?",a:"Inflectional: grammatical variants of the same word (e.g., cats, walked) \u2014 same POS. Derivational: creates new words, often changes POS (e.g., happy \u2192 happiness)."},
+  {q:"What are free vs. bound morphemes?",a:"Free: can stand alone as a word (e.g., book). Bound: must attach to another morpheme (e.g., -ness, un-)."},
+  {q:"What is the Distributional Hypothesis?",a:"\u201cYou shall know a word by the company it keeps\u201d (Firth). Words with similar meanings appear in similar contexts."},
+  {q:"What is the difference between a term-document matrix and a term-term co-occurrence matrix?",a:"Term-document: rows = words, columns = documents; captures topic-level meaning. Term-term: rows and columns = words; captures semantic/syntactic proximity via a context window."},
+  {q:"What is PMI (Pointwise Mutual Information)?",a:"A measure of word association: how much more often two words co-occur than expected by chance. Positive PMI indicates attraction between words."},
+  {q:"What is cosine similarity?",a:"Measures the angle between two vectors in a vector space. Range: -1 to 1; closer to 1 means more similar."},
+  {q:"What is the difference between Word Sense Disambiguation (WSD) and Word Sense Induction (WSI)?",a:"WSD: classify a word token into a predefined set of senses (e.g., WordNet). WSI: discover senses from data without a predefined inventory (unsupervised)."},
+  {q:"What is knowledge-based WSD?",a:"Using a semantic resource like WordNet to match a word\u2019s context to its most likely sense (e.g., the Lesk algorithm)."},
+  {q:"What is WordNet?",a:"A lexical database of English organizing words into synsets (synonym sets) linked by semantic relations: hypernymy, hyponymy, meronymy, etc."},
+  {q:"What is PCA/SVD used for in distributional semantics?",a:"Dimensionality reduction \u2014 makes vectors less sparse, removes noise, and can reveal latent semantic structure."},
+  {q:"What is skip-gram vs. CBOW in word2vec?",a:"Skip-gram: predicts surrounding context words given a target word (better for rare words). CBOW: predicts the target word from surrounding context (faster, better for frequent words)."},
+  {q:"What is the principle of compositionality?",a:"The meaning of a complex expression is determined by the meanings of its parts and how they are combined."},
+  {q:"What is multimodal representation? Give examples.",a:"Combining text with other modalities (images, video, audio) for richer semantics. Applications: image captioning, visual question answering (VQA), cross-modal retrieval."},
+  {q:"What are BERT\u2019s two pretraining tasks?",a:"1. Masked Language Modeling (MLM): predict randomly masked tokens. 2. Next Sentence Prediction (NSP): predict whether two sentences are consecutive."},
+  {q:"How do BERT and GPT differ?",a:"BERT: encoder-only, bidirectional, best for classification/NLU tasks. GPT: decoder-only, autoregressive (left-to-right), best for text generation."},
+  {q:"Why is a train/dev/test split needed in NLP?",a:"Train: fit model parameters. Dev: tune hyperparameters and select model. Test: final unbiased evaluation. Prevents overfitting to test data."},
+  {q:"What is overfitting and how can it be reduced?",a:"Model performs well on training data but poorly on unseen data. Reduce with: regularization (L1/L2), dropout, early stopping, more data, data augmentation, cross-validation."},
+  {q:"What is underfitting?",a:"Model is too simple to capture the underlying pattern \u2014 performs poorly on both training and test data."},
+  {q:"What is cross-validation?",a:"Dataset is split into k folds; model is trained on k-1 folds and tested on the remaining fold, repeated k times. Useful when data is scarce."},
+  {q:"What is a confusion matrix?",a:"A table showing TP, FP, FN, TN for a classifier. Rows = actual labels, columns = predicted labels (or vice versa)."},
+  {q:"What is precision vs. recall vs. F1?",a:"Precision: of all predicted positives, how many are truly positive. Recall: of all actual positives, how many were retrieved. F1: harmonic mean of precision and recall."},
+  {q:"When would you prefer high precision over high recall (and vice versa)?",a:"High precision: when false positives are costly (e.g., flagging a legitimate email as spam). High recall: when false negatives are costly (e.g., missing actual spam or a disease)."},
+  {q:"What is Pearson correlation?",a:"Measures the linear relationship between two continuous, normally distributed variables. Values range from -1 to +1."},
+  {q:"What is Spearman rank correlation?",a:"Measures the monotonic relationship between variables using their ranks. More appropriate for non-normally distributed or ordinal linguistic data."},
+  {q:"What is the difference between correlation and causation?",a:"Correlation means two variables co-vary. Causation means one variable directly influences the other. Correlation never implies causation on its own."},
+  {q:"What does R\u00b2 measure in regression?",a:"The proportion of variance in the dependent variable explained by the model. R\u00b2 = 1: perfect fit; R\u00b2 = 0: model explains nothing."},
+  {q:"What is a p-value?",a:"The probability of observing the result (or more extreme) if the null hypothesis is true. p < 0.05 is conventionally considered statistically significant."},
+  {q:"What is supervised fine-tuning (SFT) for LLMs?",a:"Training a pretrained LLM on curated (prompt, ideal response) pairs written by humans to teach desired behavior."},
+  {q:"What is RLHF (Reinforcement Learning from Human Feedback)?",a:"A reward model is trained on human preference rankings between outputs, then used to fine-tune the LLM via reinforcement learning (e.g., PPO)."},
+  {q:"What is DPO (Direct Preference Optimization)?",a:"An alternative to RLHF that directly optimizes the model on preference pairs (preferred vs. rejected response) without a separate reward model."},
+  {q:"What is in-context learning / prompting?",a:"Guiding an LLM\u2019s behavior through the prompt at inference time \u2014 no weight updates. Includes zero-shot and few-shot prompting."},
+  {q:"What is a potential risk of personalized LLMs?",a:"Reinforcing user biases/echo chambers, privacy violations, manipulation, or generating harmful outputs tailored to a user\u2019s preferences."},
+  {q:"What is the difference between empirical and rational linguistics?",a:"Empirical: derives knowledge from corpus data and observation. Rational: derives knowledge from introspection and theoretical reasoning (Chomskyan tradition)."},
+  {q:"What is the difference between word tokens and word types?",a:"Tokens: total number of word occurrences in a corpus. Types: number of unique words (vocabulary size)."},
+  {q:"What is a frequency spectrum of a corpus?",a:"A distribution showing how many word types occur exactly once (hapax legomena), twice, three times, etc. \u2014 describes the vocabulary frequency structure."},
+  {q:"What does Zipf\u2019s Law state?",a:"The frequency of a word is inversely proportional to its rank in the frequency list \u2014 the most frequent word occurs ~twice as often as the second most frequent, etc."},
+  {q:"What are the Kolmogorov axioms of probability?",a:"1. P(A) \u2265 0 for all events A.  2. P(sample space) = 1.  3. For mutually exclusive events, P(A \u222a B) = P(A) + P(B)."},
+  {q:"What is conditional probability?",a:"The probability of event A given that event B has occurred: P(A|B) = P(A \u2229 B) / P(B)."},
+  {q:"What is Bayes\u2019 theorem?",a:"P(A|B) = P(B|A) \u00d7 P(A) / P(B). Allows updating beliefs given new evidence; fundamental to many NLP models."},
+  {q:"What is entropy in information theory?",a:"A measure of uncertainty/unpredictability of a probability distribution. Uniform distributions have maximum entropy; deterministic distributions have zero entropy."},
+  {q:"What is mutual information?",a:"Measures how much knowing one variable reduces uncertainty about another. Higher value = stronger statistical dependency."},
+  {q:"What is an n-gram language model?",a:"A model that estimates the probability of a word given the previous n-1 words, using frequency counts from a corpus (MLE)."},
+  {q:"What is the Markov assumption in n-gram models?",a:"The probability of the next word depends only on the previous n-1 words, not the full history."},
+  {q:"What is Laplace (add-one) smoothing?",a:"Adding 1 to all n-gram counts (including unseen ones) before computing probabilities, to avoid zero probabilities for unseen n-grams."},
+  {q:"What is perplexity?",a:"A measure of how well a language model predicts a test set. Lower perplexity = better model. It is the inverse probability of the test set, normalized by sequence length."},
+  {q:"How are n-gram LMs related to modern LLMs?",a:"N-gram models are statistical precursors. Modern LLMs (Transformers) also model next-token probability given context, but use neural networks and much longer context windows."},
+  {q:"What is the key difference between classification and clustering?",a:"Classification is supervised \u2014 assigns predefined labels using labeled training data. Clustering is unsupervised \u2014 discovers groupings in data without predefined categories."},
+  {q:"What is Naive Bayes\u2019 key assumption?",a:"Feature independence \u2014 all features (e.g., words) are assumed to be conditionally independent given the class. Rarely true in practice but computationally convenient."},
+  {q:"How does a Decision Tree work?",a:"Recursively splits data based on the feature that maximizes information gain, building a tree where leaves represent class labels."},
+  {q:"How does k-Means clustering work?",a:"1. Assign k random centroids. 2. Assign each point to nearest centroid. 3. Recompute centroids. 4. Repeat until convergence."},
+  {q:"What is hierarchical clustering?",a:"Builds a dendrogram by iteratively merging (agglomerative) or splitting (divisive) clusters based on a linkage criterion (e.g., single, complete, average linkage)."},
+  {q:"What is the silhouette score?",a:"A clustering quality metric from -1 to 1. High score = point is well-matched to its own cluster and poorly matched to neighboring clusters."},
+  {q:"What is the Rand Index?",a:"A pairwise clustering evaluation metric measuring the fraction of point pairs correctly placed in the same or different clusters compared to a ground truth."}
+];
+
+// Tag decks
+FORMULAS.forEach(c => c.deck = 'formulas');
+CONCEPTS.forEach(c => c.deck = 'concepts');
+
+// ─── Persistence layer ───
+const STORAGE_KEY = 'mcl_flashcards_v1';
+
+function cardId(card) {
+  // Use first 60 chars of question as a stable key
+  return card.q.substring(0, 60);
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch { return {}; }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mastery));
+    flashSaveIndicator();
+  } catch {}
+}
+
+function flashSaveIndicator() {
+  const el = document.getElementById('saveIndicator');
+  el.classList.add('flash');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('flash'), 1500);
+}
+
+// mastery: { [cardId]: { timesKnown: n, timesMissed: n, lastResult: 'known'|'missed', lastSeen: ts } }
+let mastery = loadProgress();
+
+function markMastery(card, isKnown) {
+  const id = cardId(card);
+  if (!mastery[id]) mastery[id] = { timesKnown: 0, timesMissed: 0, lastResult: null, lastSeen: 0 };
+  if (isKnown) {
+    mastery[id].timesKnown++;
+    mastery[id].lastResult = 'known';
+  } else {
+    mastery[id].timesMissed++;
+    mastery[id].lastResult = 'missed';
+  }
+  mastery[id].lastSeen = Date.now();
+  saveProgress();
+}
+
+function isMastered(card) {
+  const m = mastery[cardId(card)];
+  // Mastered = known at least 2 times AND last result was known
+  return m && m.timesKnown >= 2 && m.lastResult === 'known';
+}
+
+function getMasteryCount() {
+  return allCards.filter(c => isMastered(c)).length;
+}
+
+function updateMasteryBar() {
+  const count = getMasteryCount();
+  const total = allCards.length;
+  const pct = total ? Math.round((count / total) * 100) : 0;
+  document.getElementById('masteryPct').textContent = pct + '%';
+  document.getElementById('masteryFill').style.width = pct + '%';
+  document.getElementById('masterySub').textContent = `${count} / ${total} cards mastered across sessions`;
+}
+
+// ─── State ───
+let allCards = [...CONCEPTS, ...FORMULAS];
+let deck = [];
+let idx = 0;
+let known = new Set();
+let missed = new Set();
+let currentDeck = 'all';
+let flipped = false;
+let transitioning = false;
+
+// ─── DOM ───
+const $ = s => document.querySelector(s);
+const cardStage = $('#cardStage');
+const cardInner = $('#cardInner');
+const frontBody = $('#frontBody');
+const backBody = $('#backBody');
+const cardCounter = $('#cardCounter');
+const cardCounterBack = $('#cardCounterBack');
+const completeScreen = $('#completeScreen');
+const actionsEl = $('#actions');
+
+// ─── Init ───
+function initDeck(deckName) {
+  currentDeck = deckName;
+  known = new Set();
+  missed = new Set();
+  idx = 0;
+  flipped = false;
+
+  if (deckName === 'all') deck = [...allCards];
+  else if (deckName === 'concepts') deck = allCards.filter(c => c.deck === 'concepts');
+  else if (deckName === 'formulas') deck = allCards.filter(c => c.deck === 'formulas');
+  else if (deckName === 'missed') {
+    deck = allCards.filter((_, i) => missed.has(i));
+    if (deck.length === 0) { deck = [...allCards]; currentDeck = 'all'; }
+  } else if (deckName === 'weak') {
+    // Cards missed more than known, or last result was missed
+    deck = allCards.filter(c => {
+      const m = mastery[cardId(c)];
+      return m && (m.timesMissed > m.timesKnown || m.lastResult === 'missed');
+    });
+    if (deck.length === 0) { deck = [...allCards]; currentDeck = 'all'; }
+  }
+
+  shuffle(deck);
+  completeScreen.classList.remove('visible');
+  cardStage.style.display = '';
+  actionsEl.style.display = '';
+  updateCounts();
+  showCard();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// ─── Render card ───
+function showCard() {
+  if (idx >= deck.length) return showComplete();
+
+  cardInner.classList.remove('flipped');
+  flipped = false;
+  const card = deck[idx];
+  frontBody.textContent = card.q;
+  cardCounter.textContent = `${idx + 1} / ${deck.length}`;
+  cardCounterBack.textContent = `${idx + 1} / ${deck.length}`;
+
+  // Render answer: split formula from description for clean layout
+  const raw = card.a;
+  const hasFormula = raw.includes('\\[');
+
+  if (hasFormula) {
+    // Split into formula part and description part
+    const endFormula = raw.lastIndexOf('\\]');
+    let formulaPart = raw.substring(0, endFormula + 2);
+    let descPart = raw.substring(endFormula + 2).replace(/^<br\s*\/?>/, '').trim();
+
+    // Format description: split on | and wrap each piece
+    let descHTML = '';
+    if (descPart) {
+      const pieces = descPart.split('|').map(s => s.trim()).filter(Boolean);
+      descHTML = pieces.map(p => `<span class="def-item">${p}</span>`).join('');
+    }
+
+    backBody.innerHTML =
+      `<div class="answer-wrap">` +
+        `<div class="answer-formula">${formulaPart}</div>` +
+        (descHTML ? `<div class="answer-desc">${descHTML}</div>` : '') +
+      `</div>`;
+  } else {
+    backBody.innerHTML = `<div class="answer-wrap"><div class="answer-plain">${raw}</div></div>`;
+  }
+
+  renderMathInElement(backBody, {
+    delimiters: [
+      {left: "\\[", right: "\\]", display: true},
+      {left: "\\(", right: "\\)", display: false}
+    ],
+    throwOnError: false
+  });
+
+  updateStats();
+}
+
+function flipCard() {
+  if (transitioning) return;
+  flipped = !flipped;
+  if (flipped) cardInner.classList.add('flipped');
+  else cardInner.classList.remove('flipped');
+}
+
+function nextCard(isKnown) {
+  if (transitioning) return;
+  transitioning = true;
+  const globalIdx = allCards.indexOf(deck[idx]);
+
+  if (isKnown) {
+    known.add(globalIdx);
+    missed.delete(globalIdx);
+  } else {
+    missed.add(globalIdx);
+    known.delete(globalIdx);
+  }
+
+  // Persist to localStorage
+  markMastery(deck[idx], isKnown);
+
+  cardStage.classList.add('slide-out');
+  setTimeout(() => {
+    cardStage.classList.remove('slide-out');
+    idx++;
+    showCard();
+    cardStage.classList.add('slide-in');
+    setTimeout(() => {
+      cardStage.classList.remove('slide-in');
+      transitioning = false;
+    }, 300);
+  }, 250);
+
+  updateStats();
+  updateCounts();
+  updateMasteryBar();
+}
+
+function updateStats() {
+  const total = deck.length;
+  const k = [...known].filter(gi => deck.includes(allCards[gi])).length;
+  const m = [...missed].filter(gi => deck.includes(allCards[gi])).length;
+  const left = total - k - m;
+
+  $('#statKnown').textContent = k;
+  $('#statMissed').textContent = m;
+  $('#statLeft').textContent = left;
+
+  $('#progressKnown').style.width = (total ? (k/total)*100 : 0) + '%';
+  $('#progressUnknown').style.width = (total ? (m/total)*100 : 0) + '%';
+}
+
+function updateCounts() {
+  $('#countAll').textContent = allCards.length;
+  $('#countConcepts').textContent = allCards.filter(c => c.deck === 'concepts').length;
+  $('#countFormulas').textContent = allCards.filter(c => c.deck === 'formulas').length;
+  $('#countMissed').textContent = missed.size;
+
+  const weakCount = allCards.filter(c => {
+    const m = mastery[cardId(c)];
+    return m && (m.timesMissed > m.timesKnown || m.lastResult === 'missed');
+  }).length;
+  $('#countWeak').textContent = weakCount;
+
+  document.querySelectorAll('.deck-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.deck === currentDeck);
+  });
+}
+
+function showComplete() {
+  cardStage.style.display = 'none';
+  actionsEl.style.display = 'none';
+  completeScreen.classList.add('visible');
+  const total = deck.length;
+  const k = [...known].filter(gi => deck.includes(allCards[gi])).length;
+  $('#finalKnown').textContent = k;
+  $('#finalTotal').textContent = total;
+  const pct = total ? Math.round((k/total)*100) : 0;
+  const msg = pct >= 90 ? "Excellent \u2014 you\u2019re ready." :
+              pct >= 70 ? "Strong foundation. Review the missed cards once more." :
+              pct >= 50 ? "Getting there. Focus on the cards you missed." :
+              "Keep going \u2014 repetition is the key.";
+  $('#finalMsg').textContent = msg;
+  $('#btnReviewMissed').style.display = missed.size > 0 ? '' : 'none';
+  updateCounts();
+}
+
+// ─── Events ───
+cardStage.addEventListener('click', flipCard);
+
+$('#btnKnow').addEventListener('click', () => nextCard(true));
+$('#btnMiss').addEventListener('click', () => nextCard(false));
+
+$('#btnShuffle').addEventListener('click', () => {
+  shuffle(deck);
+  idx = 0;
+  known.clear();
+  missed.clear();
+  completeScreen.classList.remove('visible');
+  cardStage.style.display = '';
+  actionsEl.style.display = '';
+  showCard();
+  updateStats();
+});
+
+$('#btnReset').addEventListener('click', () => initDeck(currentDeck));
+$('#btnRestart').addEventListener('click', () => initDeck(currentDeck));
+$('#btnClearData').addEventListener('click', () => {
+  if (confirm('Clear all saved progress? This removes your mastery data across all sessions.')) {
+    localStorage.removeItem(STORAGE_KEY);
+    mastery = {};
+    updateMasteryBar();
+    initDeck(currentDeck);
+  }
+});
+$('#btnReviewMissed').addEventListener('click', () => {
+  const missedCards = allCards.filter((_, i) => missed.has(i));
+  if (missedCards.length === 0) return;
+  deck = [...missedCards];
+  shuffle(deck);
+  idx = 0;
+  known.clear();
+  missed.clear();
+  completeScreen.classList.remove('visible');
+  cardStage.style.display = '';
+  actionsEl.style.display = '';
+  updateCounts();
+  showCard();
+});
+
+document.querySelectorAll('.deck-btn').forEach(btn => {
+  btn.addEventListener('click', () => initDeck(btn.dataset.deck));
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+  else if (e.key === '2' || e.key === 'ArrowRight') nextCard(true);
+  else if (e.key === '1' || e.key === 'ArrowLeft') nextCard(false);
+});
+
+// Start
+initDeck('all');
+updateMasteryBar();
+</script>
+</body>
+</html>
