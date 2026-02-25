@@ -31,3 +31,7 @@ Hosted on Cloudflare Pages. Deploy manually with:
 ```
 npx wrangler pages deploy . --project-name=methods-cl-review
 ```
+
+---
+
+Built entirely in [QoderWork](https://qoder.com/qoderwork) — from parsing the Anki exports to writing the app, styling it, deploying it, and adding accessibility features, all through conversation.
