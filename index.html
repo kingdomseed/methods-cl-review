@@ -1533,8 +1533,8 @@ document.addEventListener('mouseup', e => {
   document.getElementById('labelKnow').style.opacity = 0;
   document.getElementById('labelMiss').style.opacity = 0;
 
-  // Reset card position
-  cardInner.style.transform = flipped ? 'rotateY(180deg)' : '';
+  // Reset card position — clear inline transform so .flipped class controls it
+  cardInner.style.transform = '';
 
   // If dragged far enough, trigger action
   if (absDx >= DRAG_THRESHOLD) {
