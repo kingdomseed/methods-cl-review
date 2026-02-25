@@ -173,6 +173,7 @@ body::before {
   height: var(--card-height);
   margin-bottom: 1.5rem;
   cursor: pointer;
+  position: relative;
 }
 .card-inner {
   position: relative;
@@ -591,6 +592,189 @@ body::before {
   from { opacity: 0; transform: translateX(30px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* ── Drag-to-swipe ── */
+.card-stage.dragging .card-inner {
+  transition: none !important;
+}
+.card-stage .drag-indicator {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 100%;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+.card-stage .drag-indicator.drag-know {
+  background: linear-gradient(90deg, transparent 60%, rgba(90,154,106,0.25) 100%);
+  border-right: 3px solid var(--green);
+}
+.card-stage .drag-indicator.drag-miss {
+  background: linear-gradient(-90deg, transparent 60%, rgba(184,84,80,0.25) 100%);
+  border-left: 3px solid var(--red);
+}
+.card-stage .drag-indicator.visible { opacity: 1; }
+.drag-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  z-index: 11;
+}
+.drag-label.visible { opacity: 1; }
+.drag-label.label-know {
+  right: 1.2rem;
+  color: var(--green);
+}
+.drag-label.label-miss {
+  left: 1.2rem;
+  color: var(--red);
+}
+
+/* ── Focus rings ── */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.card-stage:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+.deck-btn:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+}
+
+/* ── Answer feedback toast ── */
+.feedback-toast {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10000;
+}
+.feedback-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.feedback-toast.toast-know {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(90,154,106,0.3);
+}
+.feedback-toast.toast-miss {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid rgba(184,84,80,0.3);
+}
+.feedback-toast.toast-skip {
+  background: var(--surface-raised);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+/* ── Keyboard shortcut overlay ── */
+.shortcut-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14,15,19,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.shortcut-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.shortcut-panel {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  max-width: 420px;
+  width: 90%;
+}
+.shortcut-panel h3 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: var(--amber);
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.shortcut-row:last-child { border-bottom: none; }
+.shortcut-action {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.shortcut-keys {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+.shortcut-key {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--amber);
+}
+.shortcut-or {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--text-faint);
+}
+.shortcut-close {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-faint);
+  text-align: center;
+  margin-top: 1.2rem;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 600px) {
+  .shortcut-panel { padding: 1.5rem 1.2rem; }
+  .shortcut-action { font-size: 0.78rem; }
+  .shortcut-key { font-size: 0.6rem; padding: 2px 6px; }
+  .feedback-toast { font-size: 0.62rem; top: 0.8rem; }
+}
 </style>
 </head>
 <body>
@@ -620,7 +804,11 @@ body::before {
     <div class="progress-fill-unknown" id="progressUnknown" style="width:0%"></div>
   </div>
 
-  <div class="card-stage" id="cardStage">
+  <div class="card-stage" id="cardStage" tabindex="0" role="button" aria-label="Flashcard. Press Space to flip, arrow keys to answer.">
+    <div class="drag-indicator drag-know" id="dragKnow"></div>
+    <div class="drag-indicator drag-miss" id="dragMiss"></div>
+    <div class="drag-label label-know" id="labelKnow">Know it</div>
+    <div class="drag-label label-miss" id="labelMiss">Missed</div>
     <div class="card-inner" id="cardInner">
       <div class="card-face card-front">
         <div class="card-counter" id="cardCounter"></div>
@@ -638,14 +826,15 @@ body::before {
   </div>
 
   <div class="actions" id="actions">
-    <button class="act-btn miss" id="btnMiss">Missed <span class="key">1</span></button>
-    <button class="act-btn know" id="btnKnow">Know it <span class="key">2</span></button>
+    <button class="act-btn miss" id="btnMiss" aria-label="Mark card as missed">Missed <span class="key">1</span></button>
+    <button class="act-btn know" id="btnKnow" aria-label="Mark card as known">Know it <span class="key">2</span></button>
   </div>
 
   <div class="controls">
     <button class="ctrl-btn" id="btnShuffle">Shuffle</button>
     <button class="ctrl-btn" id="btnReset">Reset</button>
     <button class="ctrl-btn" id="btnClearData">Clear saved data</button>
+    <button class="ctrl-btn" id="btnShortcuts" aria-label="Show keyboard shortcuts">Shortcuts <span class="key">?</span></button>
   </div>
 
   <div class="save-indicator" id="saveIndicator">Progress saved</div>
@@ -656,6 +845,12 @@ body::before {
     <div class="mastery-sub" id="masterySub">0 / 148 cards mastered across sessions</div>
   </div>
 
+  <!-- Feedback toast -->
+  <div class="feedback-toast" id="feedbackToast" role="status" aria-live="polite"></div>
+
+  <!-- ARIA live region for screen readers -->
+  <div id="ariaLive" aria-live="assertive" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
+
   <div class="complete-screen" id="completeScreen">
     <h2>Session Complete</h2>
     <p>You reviewed all cards in this deck.</p>
@@ -663,6 +858,34 @@ body::before {
     <p id="finalMsg"></p>
     <button class="ctrl-btn" id="btnRestart">Review again</button>
     <button class="ctrl-btn" id="btnReviewMissed" style="margin-top:0.75rem">Review missed only</button>
+  </div>
+</div>
+
+<!-- Keyboard shortcut overlay -->
+<div class="shortcut-overlay" id="shortcutOverlay">
+  <div class="shortcut-panel">
+    <h3>Keyboard Shortcuts</h3>
+    <div class="shortcut-row">
+      <span class="shortcut-action">Flip card</span>
+      <span class="shortcut-keys"><span class="shortcut-key">Space</span><span class="shortcut-or">or</span><span class="shortcut-key">Enter</span></span>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-action">Mark as known</span>
+      <span class="shortcut-keys"><span class="shortcut-key">2</span><span class="shortcut-or">or</span><span class="shortcut-key">&rarr;</span></span>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-action">Mark as missed</span>
+      <span class="shortcut-keys"><span class="shortcut-key">1</span><span class="shortcut-or">or</span><span class="shortcut-key">&larr;</span></span>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-action">Skip card</span>
+      <span class="shortcut-keys"><span class="shortcut-key">S</span></span>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-action">This help</span>
+      <span class="shortcut-keys"><span class="shortcut-key">?</span></span>
+    </div>
+    <div class="shortcut-close">Press <span class="shortcut-key">?</span> or <span class="shortcut-key">Esc</span> to close</div>
   </div>
 </div>
 
@@ -1022,6 +1245,10 @@ function nextCard(isKnown) {
   // Persist to localStorage
   markMastery(deck[idx], isKnown);
 
+  // Show feedback toast
+  showToast(isKnown ? 'know' : 'miss', isKnown ? 'Know it' : 'Missed');
+  announceToSR(isKnown ? 'Marked as known' : 'Marked as missed');
+
   cardStage.classList.add('slide-out');
   setTimeout(() => {
     cardStage.classList.remove('slide-out');
@@ -1089,13 +1316,8 @@ function showComplete() {
 }
 
 // ─── Events ───
-// Use click for desktop, touchend handles mobile (see below)
-cardStage.addEventListener('click', e => {
-  // Skip if touch device — handled by touchend
-  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  if (window._lastTouchEnd && Date.now() - window._lastTouchEnd < 500) return;
-  flipCard();
-});
+// Click-to-flip is now handled in mouseup (desktop) and touchend (mobile)
+// so we remove the plain click handler to avoid conflicts with drag-to-swipe
 
 $('#btnKnow').addEventListener('click', () => nextCard(true));
 $('#btnMiss').addEventListener('click', () => nextCard(false));
@@ -1122,6 +1344,7 @@ $('#btnClearData').addEventListener('click', () => {
     initDeck(currentDeck);
   }
 });
+$('#btnShortcuts').addEventListener('click', () => toggleShortcutOverlay());
 $('#btnReviewMissed').addEventListener('click', () => {
   const missedCards = allCards.filter((_, i) => missed.has(i));
   if (missedCards.length === 0) return;
@@ -1143,9 +1366,18 @@ document.querySelectorAll('.deck-btn').forEach(btn => {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
+  // Shortcut overlay takes priority
+  const overlay = document.getElementById('shortcutOverlay');
+  if (overlay.classList.contains('visible')) {
+    if (e.key === '?' || e.key === 'Escape') { e.preventDefault(); toggleShortcutOverlay(); }
+    return;
+  }
+
   if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
   else if (e.key === '2' || e.key === 'ArrowRight') nextCard(true);
   else if (e.key === '1' || e.key === 'ArrowLeft') nextCard(false);
+  else if (e.key === 's' || e.key === 'S') skipCard();
+  else if (e.key === '?') toggleShortcutOverlay();
 });
 
 // ─── Touch swipe support ───
@@ -1183,6 +1415,136 @@ cardStage.addEventListener('touchend', e => {
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 document.querySelectorAll('.card-front .card-hint').forEach(el => {
   el.textContent = isTouchDevice ? 'tap to reveal · swipe to answer' : 'click or press space to reveal';
+});
+
+// ─── Feedback toast ───
+let toastTimer = null;
+function showToast(type, text) {
+  const toast = document.getElementById('feedbackToast');
+  clearTimeout(toastTimer);
+  toast.className = 'feedback-toast';
+  toast.textContent = text;
+  // Force reflow for re-triggering animation
+  void toast.offsetWidth;
+  toast.classList.add('visible', `toast-${type}`);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 1200);
+}
+
+// ─── ARIA live announcements ───
+function announceToSR(msg) {
+  const el = document.getElementById('ariaLive');
+  el.textContent = '';
+  requestAnimationFrame(() => { el.textContent = msg; });
+}
+
+// ─── Skip card (no mark) ───
+function skipCard() {
+  if (transitioning || idx >= deck.length) return;
+  transitioning = true;
+  showToast('skip', 'Skipped');
+  announceToSR('Card skipped');
+
+  cardStage.classList.add('slide-out');
+  setTimeout(() => {
+    cardStage.classList.remove('slide-out');
+    // Move current card to end of deck so it comes back later
+    const skipped = deck.splice(idx, 1)[0];
+    deck.push(skipped);
+    // idx stays the same since array shifted
+    showCard();
+    cardStage.classList.add('slide-in');
+    setTimeout(() => {
+      cardStage.classList.remove('slide-in');
+      transitioning = false;
+    }, 300);
+  }, 250);
+}
+
+// ─── Keyboard shortcut overlay ───
+function toggleShortcutOverlay() {
+  const overlay = document.getElementById('shortcutOverlay');
+  overlay.classList.toggle('visible');
+}
+// Close overlay on background click
+document.getElementById('shortcutOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) toggleShortcutOverlay();
+});
+
+// ─── Mouse drag-to-swipe ───
+let dragStartX = 0;
+let isDragging = false;
+const DRAG_THRESHOLD = 80; // px to trigger swipe
+
+cardStage.addEventListener('mousedown', e => {
+  // Only left button, ignore if touch device
+  if (e.button !== 0 || isTouchDevice) return;
+  dragStartX = e.clientX;
+  isDragging = true;
+  cardStage.classList.add('dragging');
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  const absDx = Math.abs(dx);
+  const progress = Math.min(absDx / DRAG_THRESHOLD, 1);
+
+  // Move card with drag
+  cardInner.style.transform = flipped
+    ? `rotateY(180deg) translateX(${dx * 0.3}px)`
+    : `translateX(${dx * 0.3}px)`;
+
+  // Show appropriate indicator
+  const knowEl = document.getElementById('dragKnow');
+  const missEl = document.getElementById('dragMiss');
+  const knowLabel = document.getElementById('labelKnow');
+  const missLabel = document.getElementById('labelMiss');
+
+  if (dx > 20) {
+    knowEl.style.opacity = progress;
+    knowLabel.style.opacity = progress;
+    missEl.style.opacity = 0;
+    missLabel.style.opacity = 0;
+  } else if (dx < -20) {
+    missEl.style.opacity = progress;
+    missLabel.style.opacity = progress;
+    knowEl.style.opacity = 0;
+    knowLabel.style.opacity = 0;
+  } else {
+    knowEl.style.opacity = 0;
+    missEl.style.opacity = 0;
+    knowLabel.style.opacity = 0;
+    missLabel.style.opacity = 0;
+  }
+});
+
+document.addEventListener('mouseup', e => {
+  if (!isDragging) return;
+  isDragging = false;
+  cardStage.classList.remove('dragging');
+
+  const dx = e.clientX - dragStartX;
+  const absDx = Math.abs(dx);
+
+  // Reset visual indicators
+  document.getElementById('dragKnow').style.opacity = 0;
+  document.getElementById('dragMiss').style.opacity = 0;
+  document.getElementById('labelKnow').style.opacity = 0;
+  document.getElementById('labelMiss').style.opacity = 0;
+
+  // Reset card position
+  cardInner.style.transform = flipped ? 'rotateY(180deg)' : '';
+
+  // If dragged far enough, trigger action
+  if (absDx >= DRAG_THRESHOLD) {
+    if (dx > 0) nextCard(true);   // drag right = know
+    else nextCard(false);          // drag left = miss
+  }
+  // Small movement = flip
+  else if (absDx < 5) {
+    flipCard();
+  }
 });
 
 // Start
