@@ -184,6 +184,44 @@ body::before {
   /* Let vertical page/card scrolling work, while preserving horizontal swipe feedback. */
   touch-action: pan-y;
 }
+
+/* Stacked deck effect - next card visible behind */
+.card-stage::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: var(--surface-raised);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  z-index: -1;
+  transform: scale(0.95);
+  opacity: 0.6;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.card-stage::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  z-index: -2;
+  transform: scale(0.9);
+  opacity: 0.3;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Expand behind cards when dragging */
+.card-stage.dragging::before {
+  transform: scale(0.96) translateY(2px);
+  opacity: 0.8;
+}
+
+.card-stage.dragging::after {
+  transform: scale(0.92) translateY(4px);
+  opacity: 0.5;
+}
 .card-inner {
   position: relative;
   width: 100%;
@@ -608,45 +646,111 @@ body::before {
 }
 .card-stage .drag-indicator {
   position: absolute;
-  top: 0; bottom: 0;
-  width: 100%;
-  border-radius: 12px;
+  top: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 3px solid;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
 }
 .card-stage .drag-indicator.drag-know {
-  background: linear-gradient(90deg, transparent 60%, rgba(90,154,106,0.25) 100%);
-  border-right: 3px solid var(--green);
+  right: 20px;
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 20px rgba(90,154,106,0.4);
+}
+.card-stage .drag-indicator.drag-know::before {
+  content: '✓';
+  font-weight: bold;
 }
 .card-stage .drag-indicator.drag-miss {
-  background: linear-gradient(-90deg, transparent 60%, rgba(184,84,80,0.25) 100%);
-  border-left: 3px solid var(--red);
+  left: 20px;
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 20px rgba(184,84,80,0.4);
 }
-.card-stage .drag-indicator.visible { opacity: 1; }
+.card-stage .drag-indicator.drag-miss::before {
+  content: '✕';
+  font-weight: bold;
+}
+.card-stage .drag-indicator.visible { opacity: 1; transform: scale(1); }
 .drag-label {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 20px;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
   z-index: 11;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
 }
-.drag-label.visible { opacity: 1; }
+.drag-label.visible { opacity: 1; transform: translateY(0); }
 .drag-label.label-know {
-  right: 1.2rem;
+  right: 20px;
   color: var(--green);
+  border: 2px solid var(--green);
 }
 .drag-label.label-miss {
-  left: 1.2rem;
+  left: 20px;
   color: var(--red);
+  border: 2px solid var(--red);
+}
+
+/* Exit animations - like Tinder */
+.card-stage.exit-right .card-inner {
+  animation: exitRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.card-stage.exit-left .card-inner {
+  animation: exitLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes exitRight {
+  0% {
+    transform: rotate(0deg) translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(25deg) translateX(150%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes exitLeft {
+  0% {
+    transform: rotate(0deg) translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-25deg) translateX(-150%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+/* Scale effect on press */
+.card-stage.pressing .card-inner {
+  transform: scale(1.02);
+  transition: transform 0.15s ease;
+}
+
+/* Haptic feedback trigger class */
+.card-stage.haptic-ready {
+  /* Used by JS to trigger vibration at threshold */
 }
 
 /* ── Focus rings ── */
@@ -1286,10 +1390,17 @@ function nextCard(isKnown) {
   showToast(isKnown ? 'know' : 'miss', isKnown ? 'Know it' : 'Missed');
   announceToSR(isKnown ? 'Marked as known' : 'Marked as missed');
 
-  cardStage.classList.add('slide-out');
+  // Check if exit animation is already playing (from swipe)
+  const isExitAnimation = cardStage.classList.contains('exit-left') || cardStage.classList.contains('exit-right');
+  
+  if (!isExitAnimation) {
+    // Use slide-out for button clicks
+    cardStage.classList.add('slide-out');
+  }
+  
   setTimeout(() => {
     try {
-      cardStage.classList.remove('slide-out');
+      cardStage.classList.remove('slide-out', 'exit-left', 'exit-right');
       idx++;
       showCard();
       cardStage.classList.add('slide-in');
@@ -1439,31 +1550,55 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchStartTime = 0;
 let touchMoved = false;
-const DRAG_THRESHOLD = 80; // px to trigger swipe
+const DRAG_THRESHOLD = 100; // px to trigger swipe (increased for better feel)
+const ROTATION_MAX = 15; // max rotation in degrees
 
 const dragKnowEl = document.getElementById('dragKnow');
 const dragMissEl = document.getElementById('dragMiss');
 const dragKnowLabelEl = document.getElementById('labelKnow');
 const dragMissLabelEl = document.getElementById('labelMiss');
 
-function applyDragPreview(dx, dragScale = 0.3) {
+let hapticTriggered = false;
+
+function applyDragPreview(dx, dragScale = 0.35) {
   const absDx = Math.abs(dx);
   const progress = Math.min(absDx / DRAG_THRESHOLD, 1);
-  const visibleOpacity = Math.max(progress, 0.22);
-
-  // Keep card orientation while previewing horizontal drag.
+  
+  // Calculate rotation - card rotates in direction of drag
+  // Right drag = positive rotation, Left drag = negative rotation
+  const rotation = (dx / DRAG_THRESHOLD) * ROTATION_MAX;
+  
+  // Scale the badge/icon based on progress (spring effect)
+  const badgeScale = 0.5 + (progress * 0.5); // 0.5 to 1.0
+  
+  // Apply rotation and translation with smooth transform
+  // This creates the "throwing" physics feel
+  const translateX = dx * dragScale;
+  const translateY = -Math.abs(dx * 0.1); // Slight lift as you drag
+  
   cardInner.style.transform = flipped
-    ? `rotateY(180deg) translateX(${dx * dragScale}px)`
-    : `translateX(${dx * dragScale}px)`;
-
+    ? `rotateY(180deg) translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`
+    : `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`;
+  
+  // Haptic feedback when crossing threshold
+  if (progress >= 1 && !hapticTriggered) {
+    hapticTriggered = true;
+    triggerHaptic(dx > 0 ? 'know' : 'miss');
+  } else if (progress < 0.8) {
+    hapticTriggered = false;
+  }
+  
+  // Show badges with spring animation
   if (dx > 20) {
-    dragKnowEl.style.opacity = visibleOpacity;
-    dragKnowLabelEl.style.opacity = visibleOpacity;
+    dragKnowEl.style.opacity = progress;
+    dragKnowEl.style.transform = `scale(${badgeScale})`;
+    dragKnowLabelEl.style.opacity = progress;
     dragMissEl.style.opacity = 0;
     dragMissLabelEl.style.opacity = 0;
   } else if (dx < -20) {
-    dragMissEl.style.opacity = visibleOpacity;
-    dragMissLabelEl.style.opacity = visibleOpacity;
+    dragMissEl.style.opacity = progress;
+    dragMissEl.style.transform = `scale(${badgeScale})`;
+    dragMissLabelEl.style.opacity = progress;
     dragKnowEl.style.opacity = 0;
     dragKnowLabelEl.style.opacity = 0;
   } else {
@@ -1474,8 +1609,18 @@ function applyDragPreview(dx, dragScale = 0.3) {
   }
 }
 
+function triggerHaptic(type) {
+  // Vibrate if available (mobile)
+  if (navigator.vibrate) {
+    navigator.vibrate(type === 'know' ? [10] : [10, 30, 10]);
+  }
+  // Could also play subtle sound here
+}
+
 function resetDragPreview() {
   cardStage.classList.remove('dragging');
+  cardStage.classList.remove('pressing');
+  hapticTriggered = false;
   dragKnowEl.style.opacity = 0;
   dragMissEl.style.opacity = 0;
   dragKnowLabelEl.style.opacity = 0;
@@ -1490,6 +1635,8 @@ cardStage.addEventListener('touchstart', e => {
   touchStartY = t.clientY;
   touchStartTime = Date.now();
   touchMoved = false;
+  // Add pressing effect for tactile feel
+  cardStage.classList.add('pressing');
 }, { passive: true });
 
 cardStage.addEventListener('touchmove', e => {
@@ -1504,7 +1651,8 @@ cardStage.addEventListener('touchmove', e => {
   if (absDx > 4 && absDx > absDy * 0.7) {
     touchMoved = true;
     cardStage.classList.add('dragging');
-    applyDragPreview(dx, 0.55);
+    cardStage.classList.remove('pressing'); // Remove press effect once dragging
+    applyDragPreview(dx, 0.5);
     e.preventDefault();
   } else if (touchMoved && absDx <= 8) {
     touchMoved = false;
@@ -1514,7 +1662,6 @@ cardStage.addEventListener('touchmove', e => {
 
 cardStage.addEventListener('touchend', e => {
   if (touchMoved) {
-    resetDragPreview();
     touchMoved = false;
   }
 
@@ -1526,18 +1673,42 @@ cardStage.addEventListener('touchend', e => {
   const absDy = Math.abs(dy);
 
   if (typeof window._tlog === 'function') {
-    window._tlog(`<span style="color:#0f0">TOUCHEND</span> dx=${Math.round(dx)} dy=${Math.round(dy)} dt=${dt}ms pass=${absDx > 60 && absDx > absDy * 1.5 && dt < 400 ? 'YES' : 'no'}`);
+    window._tlog(`<span style="color:#0f0">TOUCHEND</span> dx=${Math.round(dx)} dy=${Math.round(dy)} dt=${dt}ms pass=${absDx > DRAG_THRESHOLD && absDx > absDy ? 'YES' : 'no'}`);
   }
 
-  // Must be a clear horizontal swipe: >30px, more horizontal than vertical, within 2s
-  if (absDx > 30 && absDx > absDy && dt < 2000) {
+  // Swipe threshold based on DRAG_THRESHOLD
+  if (absDx > DRAG_THRESHOLD && absDx > absDy && dt < 2000) {
     e.preventDefault();
-    if (dx > 0) nextCard(true);   // swipe right = know it
-    else nextCard(false);          // swipe left = missed
+    // Use exit animations with rotation for tactile feel
+    if (dx > 0) {
+      cardStage.classList.add('exit-right');
+      setTimeout(() => {
+        nextCard(true);   // swipe right = know it
+        cardStage.classList.remove('exit-right');
+        resetDragPreview();
+      }, 300); // Start next card animation mid-way
+    } else {
+      cardStage.classList.add('exit-left');
+      setTimeout(() => {
+        nextCard(false);   // swipe left = missed
+        cardStage.classList.remove('exit-left');
+        resetDragPreview();
+      }, 300);
+    }
   }
   // Short tap (no significant movement) = flip
   else if (absDx < 20 && absDy < 20 && dt < 500) {
+    resetDragPreview();
     flipCard();
+  } else {
+    // Not enough drag - snap back
+    resetDragPreview();
+    // Add elastic bounce-back animation
+    cardInner.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    cardInner.style.transform = flipped ? 'rotateY(180deg)' : '';
+    setTimeout(() => {
+      cardInner.style.transition = '';
+    }, 400);
   }
 }, { passive: false });
 
@@ -1549,7 +1720,7 @@ cardStage.addEventListener('touchcancel', () => {
 // ─── Touch-aware hint text ───
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 document.querySelectorAll('.card-front .card-hint').forEach(el => {
-  el.textContent = isTouchDevice ? 'tap to reveal · swipe to answer' : 'click or press space to reveal';
+  el.textContent = isTouchDevice ? 'tap to flip · swipe right ✓ or left ✕' : 'click to flip · drag card to answer';
 });
 
 // ─── Feedback toast ───
@@ -1626,31 +1797,57 @@ cardStage.addEventListener('mousedown', e => {
   dragStartX = e.clientX;
   isDragging = true;
   cardStage.classList.add('dragging');
+  cardStage.classList.add('pressing');
   e.preventDefault();
 });
 
 document.addEventListener('mousemove', e => {
   if (!isDragging) return;
   const dx = e.clientX - dragStartX;
+  if (Math.abs(dx) > 10) {
+    cardStage.classList.remove('pressing');
+  }
   applyDragPreview(dx);
 });
 
 document.addEventListener('mouseup', e => {
   if (!isDragging) return;
   isDragging = false;
+  cardStage.classList.remove('pressing');
 
   const dx = e.clientX - dragStartX;
   const absDx = Math.abs(dx);
-  resetDragPreview();
 
-  // If dragged far enough, trigger action
+  // If dragged far enough, trigger action with exit animation
   if (absDx >= DRAG_THRESHOLD) {
-    if (dx > 0) nextCard(true);   // drag right = know
-    else nextCard(false);          // drag left = miss
+    if (dx > 0) {
+      cardStage.classList.add('exit-right');
+      setTimeout(() => {
+        nextCard(true);   // drag right = know
+        cardStage.classList.remove('exit-right');
+        resetDragPreview();
+      }, 300);
+    } else {
+      cardStage.classList.add('exit-left');
+      setTimeout(() => {
+        nextCard(false);   // drag left = miss
+        cardStage.classList.remove('exit-left');
+        resetDragPreview();
+      }, 300);
+    }
   }
   // Small movement = flip
   else if (absDx < 5) {
+    resetDragPreview();
     flipCard();
+  } else {
+    // Not enough drag - elastic snap back
+    resetDragPreview();
+    cardInner.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    cardInner.style.transform = flipped ? 'rotateY(180deg)' : '';
+    setTimeout(() => {
+      cardInner.style.transition = '';
+    }, 400);
   }
 });
 
