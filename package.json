@@ -1,0 +1,27 @@
+{
+  "name": "methods-cl-review",
+  "version": "1.0.0",
+  "description": "**[study.binaryloom.io](https://study.binaryloom.io)**",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:semantic": "npx playwright test tests/semantic-html.spec.ts",
+    "test:a11y": "npx playwright test tests/accessibility.spec.ts",
+    "test:js": "npx playwright test tests/js-behavior.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kingdomseed/methods-cl-review.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kingdomseed/methods-cl-review/issues"
+  },
+  "homepage": "https://github.com/kingdomseed/methods-cl-review#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

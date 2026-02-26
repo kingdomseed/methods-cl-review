@@ -4,11 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Methods in CL - Exam Review</title>
+<meta name="description" content="Interactive flashcard deck for Methods in Computational Linguistics — 148 cards covering formulas, concepts, and exam review.">
+<meta property="og:title" content="Methods in CL — Exam Review Flashcards">
+<meta property="og:description" content="148 flashcards covering formulas and concepts for Methods in Computational Linguistics.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap');
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -779,32 +786,32 @@ body::before {
 </head>
 <body>
 
-<div class="shell">
-  <div class="header">
+<main class="shell">
+  <header class="header">
     <h1>Methods in Computational Linguistics</h1>
-    <div class="subtitle">Exam Review Flashcards</div>
-  </div>
+    <p class="subtitle">Exam Review Flashcards</p>
+  </header>
 
   <div class="deck-bar">
-    <button class="deck-btn active" data-deck="all">All <span class="count" id="countAll"></span></button>
-    <button class="deck-btn" data-deck="concepts">Concepts <span class="count" id="countConcepts"></span></button>
-    <button class="deck-btn" data-deck="formulas">Formulas <span class="count" id="countFormulas"></span></button>
-    <button class="deck-btn" data-deck="missed">Missed <span class="count" id="countMissed"></span></button>
-    <button class="deck-btn" data-deck="weak">Weak <span class="count" id="countWeak"></span></button>
+    <button class="deck-btn active" data-deck="all" aria-pressed="true">All <span class="count" id="countAll"></span></button>
+    <button class="deck-btn" data-deck="concepts" aria-pressed="false">Concepts <span class="count" id="countConcepts"></span></button>
+    <button class="deck-btn" data-deck="formulas" aria-pressed="false">Formulas <span class="count" id="countFormulas"></span></button>
+    <button class="deck-btn" data-deck="missed" aria-pressed="false">Missed <span class="count" id="countMissed"></span></button>
+    <button class="deck-btn" data-deck="weak" aria-pressed="false">Weak <span class="count" id="countWeak"></span></button>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-item"><span class="stat-dot known"></span> Known <span class="stat-val" id="statKnown">0</span></div>
-    <div class="stat-item"><span class="stat-dot unknown"></span> Missed <span class="stat-val" id="statMissed">0</span></div>
-    <div class="stat-item"><span class="stat-dot remaining"></span> Left <span class="stat-val" id="statLeft">0</span></div>
-  </div>
+  <ul class="stats-row" aria-label="Session statistics">
+    <li class="stat-item"><span class="stat-dot known"></span> Known <span class="stat-val" id="statKnown">0</span></li>
+    <li class="stat-item"><span class="stat-dot unknown"></span> Missed <span class="stat-val" id="statMissed">0</span></li>
+    <li class="stat-item"><span class="stat-dot remaining"></span> Left <span class="stat-val" id="statLeft">0</span></li>
+  </ul>
 
-  <div class="progress-track">
+  <div class="progress-track" role="progressbar" aria-label="Session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
     <div class="progress-fill-known" id="progressKnown" style="width:0%"></div>
     <div class="progress-fill-unknown" id="progressUnknown" style="width:0%"></div>
   </div>
 
-  <div class="card-stage" id="cardStage" tabindex="0" role="button" aria-label="Flashcard. Press Space to flip, arrow keys to answer.">
+  <div class="card-stage" id="cardStage" tabindex="0" role="region" aria-label="Flashcard. Press Space to flip, arrow keys to answer.">
     <div class="drag-indicator drag-know" id="dragKnow"></div>
     <div class="drag-indicator drag-miss" id="dragMiss"></div>
     <div class="drag-label label-know" id="labelKnow">Know it</div>
@@ -816,7 +823,7 @@ body::before {
         <div class="card-body" id="frontBody"></div>
         <div class="card-hint">click or press space to reveal</div>
       </div>
-      <div class="card-face card-back">
+      <div class="card-face card-back" aria-hidden="true">
         <div class="card-counter" id="cardCounterBack"></div>
         <div class="card-label">Answer</div>
         <div class="card-body" id="backBody"></div>
@@ -826,22 +833,22 @@ body::before {
   </div>
 
   <div class="actions" id="actions">
-    <button class="act-btn miss" id="btnMiss" aria-label="Mark card as missed">Missed <span class="key">1</span></button>
-    <button class="act-btn know" id="btnKnow" aria-label="Mark card as known">Know it <span class="key">2</span></button>
+    <button class="act-btn miss" id="btnMiss" aria-label="Mark card as missed">Missed <kbd class="key">1</kbd></button>
+    <button class="act-btn know" id="btnKnow" aria-label="Mark card as known">Know it <kbd class="key">2</kbd></button>
   </div>
 
   <div class="controls">
     <button class="ctrl-btn" id="btnShuffle">Shuffle</button>
     <button class="ctrl-btn" id="btnReset">Reset</button>
     <button class="ctrl-btn" id="btnClearData">Clear saved data</button>
-    <button class="ctrl-btn" id="btnShortcuts" aria-label="Show keyboard shortcuts">Shortcuts <span class="key">?</span></button>
+    <button class="ctrl-btn" id="btnShortcuts" aria-label="Show keyboard shortcuts">Shortcuts <kbd class="key">?</kbd></button>
   </div>
 
   <div class="save-indicator" id="saveIndicator">Progress saved</div>
 
   <div class="mastery-bar" id="masteryBar">
     <div class="mastery-label">Mastery <span class="mastery-pct" id="masteryPct">0%</span></div>
-    <div class="mastery-track"><div class="mastery-fill" id="masteryFill" style="width:0%"></div></div>
+    <div class="mastery-track" role="progressbar" aria-label="Overall mastery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="mastery-fill" id="masteryFill" style="width:0%"></div></div>
     <div class="mastery-sub" id="masterySub">0 / 148 cards mastered across sessions</div>
   </div>
 
@@ -859,33 +866,36 @@ body::before {
     <button class="ctrl-btn" id="btnRestart">Review again</button>
     <button class="ctrl-btn" id="btnReviewMissed" style="margin-top:0.75rem">Review missed only</button>
   </div>
-</div>
+</main>
 
 <!-- Keyboard shortcut overlay -->
 <div class="shortcut-overlay" id="shortcutOverlay">
-  <div class="shortcut-panel">
-    <h3>Keyboard Shortcuts</h3>
-    <div class="shortcut-row">
-      <span class="shortcut-action">Flip card</span>
-      <span class="shortcut-keys"><span class="shortcut-key">Space</span><span class="shortcut-or">or</span><span class="shortcut-key">Enter</span></span>
-    </div>
-    <div class="shortcut-row">
-      <span class="shortcut-action">Mark as known</span>
-      <span class="shortcut-keys"><span class="shortcut-key">2</span><span class="shortcut-or">or</span><span class="shortcut-key">&rarr;</span></span>
-    </div>
-    <div class="shortcut-row">
-      <span class="shortcut-action">Mark as missed</span>
-      <span class="shortcut-keys"><span class="shortcut-key">1</span><span class="shortcut-or">or</span><span class="shortcut-key">&larr;</span></span>
-    </div>
-    <div class="shortcut-row">
-      <span class="shortcut-action">Skip card</span>
-      <span class="shortcut-keys"><span class="shortcut-key">S</span></span>
-    </div>
-    <div class="shortcut-row">
-      <span class="shortcut-action">This help</span>
-      <span class="shortcut-keys"><span class="shortcut-key">?</span></span>
-    </div>
-    <div class="shortcut-close">Press <span class="shortcut-key">?</span> or <span class="shortcut-key">Esc</span> to close</div>
+  <div class="shortcut-panel" role="dialog" aria-modal="true" aria-labelledby="shortcutHeading">
+    <h3 id="shortcutHeading">Keyboard Shortcuts</h3>
+    <dl>
+      <div class="shortcut-row">
+        <dt class="shortcut-action">Flip card</dt>
+        <dd class="shortcut-keys"><kbd class="shortcut-key">Space</kbd><span class="shortcut-or">or</span><kbd class="shortcut-key">Enter</kbd></dd>
+      </div>
+      <div class="shortcut-row">
+        <dt class="shortcut-action">Mark as known</dt>
+        <dd class="shortcut-keys"><kbd class="shortcut-key">2</kbd><span class="shortcut-or">or</span><kbd class="shortcut-key">&rarr;</kbd></dd>
+      </div>
+      <div class="shortcut-row">
+        <dt class="shortcut-action">Mark as missed</dt>
+        <dd class="shortcut-keys"><kbd class="shortcut-key">1</kbd><span class="shortcut-or">or</span><kbd class="shortcut-key">&larr;</kbd></dd>
+      </div>
+      <div class="shortcut-row">
+        <dt class="shortcut-action">Skip card</dt>
+        <dd class="shortcut-keys"><kbd class="shortcut-key">S</kbd></dd>
+      </div>
+      <div class="shortcut-row">
+        <dt class="shortcut-action">This help</dt>
+        <dd class="shortcut-keys"><kbd class="shortcut-key">?</kbd></dd>
+      </div>
+    </dl>
+    <div class="shortcut-close">Press <kbd class="shortcut-key">?</kbd> or <kbd class="shortcut-key">Esc</kbd> to close</div>
+    <button class="ctrl-btn" id="btnCloseShortcuts" style="margin-top:0.75rem">Close</button>
   </div>
 </div>
 
@@ -1069,7 +1079,9 @@ function saveProgress() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(mastery));
     flashSaveIndicator();
-  } catch {}
+  } catch (e) {
+    console.warn('Progress could not be saved:', e);
+  }
 }
 
 function flashSaveIndicator() {
@@ -1112,6 +1124,7 @@ function updateMasteryBar() {
   const pct = total ? Math.round((count / total) * 100) : 0;
   document.getElementById('masteryPct').textContent = pct + '%';
   document.getElementById('masteryFill').style.width = pct + '%';
+  document.querySelector('.mastery-track').setAttribute('aria-valuenow', pct);
   document.getElementById('masterySub').textContent = `${count} / ${total} cards mastered across sessions`;
 }
 
@@ -1185,39 +1198,52 @@ function showCard() {
   cardCounter.textContent = `${idx + 1} / ${deck.length}`;
   cardCounterBack.textContent = `${idx + 1} / ${deck.length}`;
 
+  // Reset card face visibility for screen readers
+  document.querySelector('.card-front').removeAttribute('aria-hidden');
+  document.querySelector('.card-back').setAttribute('aria-hidden', 'true');
+
+  // Update card stage label with current question
+  cardStage.setAttribute('aria-label',
+    `Card ${idx + 1} of ${deck.length}: ${card.q}. Press Space to flip.`);
+
+  // Announce new card to screen readers
+  announceToSR(`Card ${idx + 1} of ${deck.length}: ${card.q}`);
+
   // Render answer: split formula from description for clean layout
+  // Note: card data is static/hardcoded in this file, not user-supplied
   const raw = card.a;
   const hasFormula = raw.includes('\\[');
 
   if (hasFormula) {
-    // Split into formula part and description part
     const endFormula = raw.lastIndexOf('\\]');
     let formulaPart = raw.substring(0, endFormula + 2);
     let descPart = raw.substring(endFormula + 2).replace(/^<br\s*\/?>/, '').trim();
 
-    // Format description: split on | and wrap each piece
     let descHTML = '';
     if (descPart) {
       const pieces = descPart.split('|').map(s => s.trim()).filter(Boolean);
       descHTML = pieces.map(p => `<span class="def-item">${p}</span>`).join('');
     }
 
-    backBody.innerHTML =
+    backBody.innerHTML =                                    // static card data only
       `<div class="answer-wrap">` +
         `<div class="answer-formula">${formulaPart}</div>` +
         (descHTML ? `<div class="answer-desc">${descHTML}</div>` : '') +
       `</div>`;
   } else {
-    backBody.innerHTML = `<div class="answer-wrap"><div class="answer-plain">${raw}</div></div>`;
+    backBody.innerHTML =                                    // static card data only
+      `<div class="answer-wrap"><div class="answer-plain">${raw}</div></div>`;
   }
 
-  renderMathInElement(backBody, {
-    delimiters: [
-      {left: "\\[", right: "\\]", display: true},
-      {left: "\\(", right: "\\)", display: false}
-    ],
-    throwOnError: false
-  });
+  if (typeof renderMathInElement === 'function') {
+    renderMathInElement(backBody, {
+      delimiters: [
+        {left: "\\[", right: "\\]", display: true},
+        {left: "\\(", right: "\\)", display: false}
+      ],
+      throwOnError: false
+    });
+  }
 
   updateStats();
 }
@@ -1225,8 +1251,17 @@ function showCard() {
 function flipCard() {
   if (transitioning) return;
   flipped = !flipped;
-  if (flipped) cardInner.classList.add('flipped');
-  else cardInner.classList.remove('flipped');
+  if (flipped) {
+    cardInner.classList.add('flipped');
+    document.querySelector('.card-front').setAttribute('aria-hidden', 'true');
+    document.querySelector('.card-back').removeAttribute('aria-hidden');
+    announceToSR('Answer revealed');
+  } else {
+    cardInner.classList.remove('flipped');
+    document.querySelector('.card-back').setAttribute('aria-hidden', 'true');
+    document.querySelector('.card-front').removeAttribute('aria-hidden');
+    announceToSR('Question: ' + deck[idx].q);
+  }
 }
 
 function nextCard(isKnown) {
@@ -1251,14 +1286,19 @@ function nextCard(isKnown) {
 
   cardStage.classList.add('slide-out');
   setTimeout(() => {
-    cardStage.classList.remove('slide-out');
-    idx++;
-    showCard();
-    cardStage.classList.add('slide-in');
-    setTimeout(() => {
-      cardStage.classList.remove('slide-in');
+    try {
+      cardStage.classList.remove('slide-out');
+      idx++;
+      showCard();
+      cardStage.classList.add('slide-in');
+      setTimeout(() => {
+        cardStage.classList.remove('slide-in');
+        transitioning = false;
+      }, 300);
+    } catch (e) {
       transitioning = false;
-    }, 300);
+      throw e;
+    }
   }, 250);
 
   updateStats();
@@ -1276,8 +1316,10 @@ function updateStats() {
   $('#statMissed').textContent = m;
   $('#statLeft').textContent = left;
 
+  const pctDone = total ? Math.round(((k + m) / total) * 100) : 0;
   $('#progressKnown').style.width = (total ? (k/total)*100 : 0) + '%';
   $('#progressUnknown').style.width = (total ? (m/total)*100 : 0) + '%';
+  document.querySelector('.progress-track').setAttribute('aria-valuenow', pctDone);
 }
 
 function updateCounts() {
@@ -1293,7 +1335,9 @@ function updateCounts() {
   $('#countWeak').textContent = weakCount;
 
   document.querySelectorAll('.deck-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.deck === currentDeck);
+    const isActive = btn.dataset.deck === currentDeck;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
 }
 
@@ -1313,6 +1357,12 @@ function showComplete() {
   $('#finalMsg').textContent = msg;
   $('#btnReviewMissed').style.display = missed.size > 0 ? '' : 'none';
   updateCounts();
+  announceToSR(`Session complete. You marked ${k} of ${total} cards as known.`);
+  setTimeout(() => {
+    const heading = completeScreen.querySelector('h2');
+    heading.setAttribute('tabindex', '-1');
+    heading.focus();
+  }, 50);
 }
 
 // ─── Events ───
@@ -1323,6 +1373,8 @@ $('#btnKnow').addEventListener('click', () => nextCard(true));
 $('#btnMiss').addEventListener('click', () => nextCard(false));
 
 $('#btnShuffle').addEventListener('click', () => {
+  transitioning = false;
+  flipped = false;
   shuffle(deck);
   idx = 0;
   known.clear();
@@ -1461,14 +1513,25 @@ function skipCard() {
 }
 
 // ─── Keyboard shortcut overlay ───
+let overlayOpener = null;
 function toggleShortcutOverlay() {
   const overlay = document.getElementById('shortcutOverlay');
+  const isOpening = !overlay.classList.contains('visible');
   overlay.classList.toggle('visible');
+  if (isOpening) {
+    overlayOpener = document.activeElement;
+    const closeBtn = document.getElementById('btnCloseShortcuts');
+    if (closeBtn) closeBtn.focus();
+  } else {
+    if (overlayOpener) overlayOpener.focus();
+    overlayOpener = null;
+  }
 }
 // Close overlay on background click
 document.getElementById('shortcutOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) toggleShortcutOverlay();
 });
+document.getElementById('btnCloseShortcuts').addEventListener('click', () => toggleShortcutOverlay());
 
 // ─── Mouse drag-to-swipe ───
 let dragStartX = 0;
