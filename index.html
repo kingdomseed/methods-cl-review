@@ -181,6 +181,8 @@ body::before {
   margin-bottom: 1.5rem;
   cursor: pointer;
   position: relative;
+  /* Let vertical page/card scrolling work, while preserving horizontal swipe feedback. */
+  touch-action: pan-y;
 }
 .card-inner {
   position: relative;
@@ -1436,14 +1438,86 @@ document.addEventListener('keydown', e => {
 let touchStartX = 0;
 let touchStartY = 0;
 let touchStartTime = 0;
+let touchMoved = false;
+const DRAG_THRESHOLD = 80; // px to trigger swipe
+
+const dragKnowEl = document.getElementById('dragKnow');
+const dragMissEl = document.getElementById('dragMiss');
+const dragKnowLabelEl = document.getElementById('labelKnow');
+const dragMissLabelEl = document.getElementById('labelMiss');
+
+function applyDragPreview(dx, dragScale = 0.3) {
+  const absDx = Math.abs(dx);
+  const progress = Math.min(absDx / DRAG_THRESHOLD, 1);
+  const visibleOpacity = Math.max(progress, 0.22);
+
+  // Keep card orientation while previewing horizontal drag.
+  cardInner.style.transform = flipped
+    ? `rotateY(180deg) translateX(${dx * dragScale}px)`
+    : `translateX(${dx * dragScale}px)`;
+
+  if (dx > 20) {
+    dragKnowEl.style.opacity = visibleOpacity;
+    dragKnowLabelEl.style.opacity = visibleOpacity;
+    dragMissEl.style.opacity = 0;
+    dragMissLabelEl.style.opacity = 0;
+  } else if (dx < -20) {
+    dragMissEl.style.opacity = visibleOpacity;
+    dragMissLabelEl.style.opacity = visibleOpacity;
+    dragKnowEl.style.opacity = 0;
+    dragKnowLabelEl.style.opacity = 0;
+  } else {
+    dragKnowEl.style.opacity = 0;
+    dragMissEl.style.opacity = 0;
+    dragKnowLabelEl.style.opacity = 0;
+    dragMissLabelEl.style.opacity = 0;
+  }
+}
+
+function resetDragPreview() {
+  cardStage.classList.remove('dragging');
+  dragKnowEl.style.opacity = 0;
+  dragMissEl.style.opacity = 0;
+  dragKnowLabelEl.style.opacity = 0;
+  dragMissLabelEl.style.opacity = 0;
+  // Clear inline transform so .flipped class controls orientation.
+  cardInner.style.transform = '';
+}
 
 cardStage.addEventListener('touchstart', e => {
-  touchStartX = e.changedTouches[0].clientX;
-  touchStartY = e.changedTouches[0].clientY;
+  const t = e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
   touchStartTime = Date.now();
+  touchMoved = false;
 }, { passive: true });
 
+cardStage.addEventListener('touchmove', e => {
+  if (transitioning || idx >= deck.length) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  // Preview only for intentional horizontal swipes.
+  if (absDx > 4 && absDx > absDy * 0.7) {
+    touchMoved = true;
+    cardStage.classList.add('dragging');
+    applyDragPreview(dx, 0.55);
+    e.preventDefault();
+  } else if (touchMoved && absDx <= 8) {
+    touchMoved = false;
+    resetDragPreview();
+  }
+}, { passive: false });
+
 cardStage.addEventListener('touchend', e => {
+  if (touchMoved) {
+    resetDragPreview();
+    touchMoved = false;
+  }
+
   window._lastTouchEnd = Date.now();
   const dx = e.changedTouches[0].clientX - touchStartX;
   const dy = e.changedTouches[0].clientY - touchStartY;
@@ -1451,17 +1525,26 @@ cardStage.addEventListener('touchend', e => {
   const absDx = Math.abs(dx);
   const absDy = Math.abs(dy);
 
-  // Must be a clear horizontal swipe: >60px, more horizontal than vertical, within 400ms
-  if (absDx > 60 && absDx > absDy * 1.5 && dt < 400) {
+  if (typeof window._tlog === 'function') {
+    window._tlog(`<span style="color:#0f0">TOUCHEND</span> dx=${Math.round(dx)} dy=${Math.round(dy)} dt=${dt}ms pass=${absDx > 60 && absDx > absDy * 1.5 && dt < 400 ? 'YES' : 'no'}`);
+  }
+
+  // Must be a clear horizontal swipe: >30px, more horizontal than vertical, within 2s
+  if (absDx > 30 && absDx > absDy && dt < 2000) {
     e.preventDefault();
     if (dx > 0) nextCard(true);   // swipe right = know it
     else nextCard(false);          // swipe left = missed
   }
   // Short tap (no significant movement) = flip
-  else if (absDx < 15 && absDy < 15 && dt < 300) {
+  else if (absDx < 20 && absDy < 20 && dt < 500) {
     flipCard();
   }
 }, { passive: false });
+
+cardStage.addEventListener('touchcancel', () => {
+  touchMoved = false;
+  resetDragPreview();
+}, { passive: true });
 
 // ─── Touch-aware hint text ───
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -1536,7 +1619,6 @@ document.getElementById('btnCloseShortcuts').addEventListener('click', () => tog
 // ─── Mouse drag-to-swipe ───
 let dragStartX = 0;
 let isDragging = false;
-const DRAG_THRESHOLD = 80; // px to trigger swipe
 
 cardStage.addEventListener('mousedown', e => {
   // Only left button, ignore if touch device
@@ -1550,54 +1632,16 @@ cardStage.addEventListener('mousedown', e => {
 document.addEventListener('mousemove', e => {
   if (!isDragging) return;
   const dx = e.clientX - dragStartX;
-  const absDx = Math.abs(dx);
-  const progress = Math.min(absDx / DRAG_THRESHOLD, 1);
-
-  // Move card with drag
-  cardInner.style.transform = flipped
-    ? `rotateY(180deg) translateX(${dx * 0.3}px)`
-    : `translateX(${dx * 0.3}px)`;
-
-  // Show appropriate indicator
-  const knowEl = document.getElementById('dragKnow');
-  const missEl = document.getElementById('dragMiss');
-  const knowLabel = document.getElementById('labelKnow');
-  const missLabel = document.getElementById('labelMiss');
-
-  if (dx > 20) {
-    knowEl.style.opacity = progress;
-    knowLabel.style.opacity = progress;
-    missEl.style.opacity = 0;
-    missLabel.style.opacity = 0;
-  } else if (dx < -20) {
-    missEl.style.opacity = progress;
-    missLabel.style.opacity = progress;
-    knowEl.style.opacity = 0;
-    knowLabel.style.opacity = 0;
-  } else {
-    knowEl.style.opacity = 0;
-    missEl.style.opacity = 0;
-    knowLabel.style.opacity = 0;
-    missLabel.style.opacity = 0;
-  }
+  applyDragPreview(dx);
 });
 
 document.addEventListener('mouseup', e => {
   if (!isDragging) return;
   isDragging = false;
-  cardStage.classList.remove('dragging');
 
   const dx = e.clientX - dragStartX;
   const absDx = Math.abs(dx);
-
-  // Reset visual indicators
-  document.getElementById('dragKnow').style.opacity = 0;
-  document.getElementById('dragMiss').style.opacity = 0;
-  document.getElementById('labelKnow').style.opacity = 0;
-  document.getElementById('labelMiss').style.opacity = 0;
-
-  // Reset card position — clear inline transform so .flipped class controls it
-  cardInner.style.transform = '';
+  resetDragPreview();
 
   // If dragged far enough, trigger action
   if (absDx >= DRAG_THRESHOLD) {
