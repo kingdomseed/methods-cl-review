@@ -4,10 +4,7 @@
   "description": "**[study.binaryloom.io](https://study.binaryloom.io)**",
   "main": "index.js",
   "scripts": {
-    "test": "npx playwright test",
-    "test:semantic": "npx playwright test tests/semantic-html.spec.ts",
-    "test:a11y": "npx playwright test tests/accessibility.spec.ts",
-    "test:js": "npx playwright test tests/js-behavior.spec.ts"
+    "test": "npx playwright test"
   },
   "repository": {
     "type": "git",

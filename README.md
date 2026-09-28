@@ -1,37 +1,30 @@
-# Methods in Computational Linguistics — Exam Review
+# Methods in Computational Linguistics — flashcards (moved)
 
-**[study.binaryloom.io](https://study.binaryloom.io)**
+**[study.binaryloom.io](https://study.binaryloom.io)** now redirects to the flashcards in the Methods study guide:
+**[methods-cl-study-guide.vercel.app/flashcards](https://methods-cl-study-guide.vercel.app/flashcards)**.
 
-An interactive flashcard app for reviewing key concepts and formulas from a Methods in Computational Linguistics course. Built as a single-page HTML/CSS/JS application with a dark academia aesthetic.
+The study guide's deck replaces this one. It was checked card by card against the lecture slides and exam protocols, schedules reviews with FSRS, renders formulas with KaTeX, and saves progress in the browser. Progress saved by the old deck (`mcl_flashcards_v1`) does not carry over.
 
-## Source Data
+## What this site serves
 
-The flashcard content was adapted from a classmate's Anki-format text exports (`methods-formulas.txt` and `methods_concepts.txt`), covering 148 cards across two decks:
+- `_redirects` — Cloudflare Pages 301 redirects from `/`, `/index.html`, `/methods-flashcards`, and `/methods-flashcards.html` to the study guide.
+- `index.html` and `methods-flashcards.html` — fallback redirect pages (meta refresh, `location.replace`, and a plain link) for hosts that ignore `_redirects`. Both are marked `noindex`.
+- `CNAME` — the custom domain.
 
-- **Concepts** (102 cards) — phonetics, corpus linguistics, annotation, distributional semantics, probability, language models, classification, clustering, evaluation metrics, and LLM training methods.
-- **Formulas** (46 cards) — sine waves, Nyquist, Cohen's/Fleiss' Kappa, PMI, cosine similarity, Bayes' theorem, entropy, n-gram MLE, Laplace smoothing, perplexity, precision/recall/F1, Naive Bayes, information gain, silhouette score, and more.
+## Tests
 
-## Features
+```sh
+npm install
+npx playwright install chromium
+npm test
+```
 
-- KaTeX rendering for LaTeX mathematical formulas
-- Card flip animations with slide transitions
-- Deck filtering (All, Concepts, Formulas, Missed, Weak)
-- Session progress tracking and cross-session mastery via localStorage
-- Touch swipe gestures for mobile
-- Mouse drag-to-swipe with green/red color feedback for desktop
-- Keyboard navigation (Space/Enter to flip, 1/Left for missed, 2/Right for known, S to skip)
-- Keyboard shortcut overlay (press ?)
-- Answer feedback toasts and ARIA live regions for screen readers
-- Responsive layout with breakpoints for tablet, mobile, and small phones
+`tests/redirect.spec.ts` checks that both pages redirect to the study guide, that they still redirect and show a manual link without JavaScript, and that `_redirects` sends every legacy path there with a 301.
 
 ## Deployment
 
 Hosted on Cloudflare Pages. Deploy manually with:
 
-```
+```sh
 npx wrangler pages deploy . --project-name=methods-cl-review
 ```
-
----
-
-Built entirely in [QoderWork](https://qoder.com/qoderwork) — from parsing the Anki exports to writing the app, styling it, deploying it, and adding accessibility features, all through conversation.
